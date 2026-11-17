@@ -1,0 +1,2550 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-accent="violet" data-density="cozy" data-font="md">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="description" content="Nexus AI — Hub de inteligencia artificial en un solo archivo HTML: chat con streaming, conectores reales (Google Workspace, GitHub, Trello, Dropbox, Asana, Slack…), detección inteligente de intención y ajustes completos. Sin backend.">
+<meta name="theme-color" id="metaTheme" content="#0e1014">
+<title>Nexus AI — Hub de Inteligencia Artificial</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%237c3aed'/%3E%3Cstop offset='1' stop-color='%232563eb'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='15' fill='url(%23g)'/%3E%3Cpath fill='%23fff' d='M32 9l5.2 13.3L51 27.5l-13.8 5.2L32 46l-5.2-13.3L13 27.5l13.8-5.2L32 9z'/%3E%3C/svg%3E">
+<style>
+/* =====================================================================
+   NEXUS AI — Hoja de estilos
+   Secciones: 1) Tokens de diseño  2) Reset/base  3) Layout  4) Sidebar
+   5) Topbar  6) Chat  7) Chips/sugerencias  8) Conectores  9) Ajustes
+   10) Modal/Toasts  11) Responsive  12) Accesibilidad
+   ===================================================================== */
+
+/* ---------- 1) TOKENS DE DISEÑO ---------- */
+:root{
+  --accent:#7c3aed; --accent-2:#a78bfa; --accent-rgb:124,58,237; --accent-contrast:#ffffff;
+  --radius:14px; --radius-sm:10px; --radius-lg:20px;
+  --ease:cubic-bezier(.4,0,.2,1);
+  --shadow:0 14px 40px rgba(0,0,0,.35);
+  --chat-fs:15px;
+}
+/* Colores de acento seleccionables (6) */
+html[data-accent="violet"]{--accent:#7c3aed;--accent-2:#a78bfa;--accent-rgb:124,58,237}
+html[data-accent="blue"]{--accent:#2563eb;--accent-2:#60a5fa;--accent-rgb:37,99,235}
+html[data-accent="emerald"]{--accent:#059669;--accent-2:#34d399;--accent-rgb:5,150,105}
+html[data-accent="amber"]{--accent:#d97706;--accent-2:#fbbf24;--accent-rgb:217,119,6}
+html[data-accent="rose"]{--accent:#e11d48;--accent-2:#fb7185;--accent-rgb:225,29,72}
+html[data-accent="cyan"]{--accent:#0891b2;--accent-2:#22d3ee;--accent-rgb:8,145,178}
+
+/* Tema oscuro (por defecto) */
+html[data-theme="dark"]{
+  --bg:#0e1014; --bg-2:#12141a; --panel:#151822; --panel-2:#1a1e29; --panel-3:#212634;
+  --text:#e8eaef; --text-2:#a7adbf; --text-3:#6d7488;
+  --border:rgba(255,255,255,.07); --border-2:rgba(255,255,255,.13);
+  --user-bubble:rgba(var(--accent-rgb),.16);
+  --code-bg:#0a0c11; --code-head:#141721;
+  --ok:#34d399; --warn:#fbbf24; --err:#fb7185;
+  --glass:rgba(21,24,34,.75);
+  color-scheme:dark;
+}
+/* Tema claro */
+html[data-theme="light"]{
+  --bg:#f4f4f8; --bg-2:#ececf1; --panel:#ffffff; --panel-2:#f6f6fa; --panel-3:#ececf2;
+  --text:#1d2130; --text-2:#565d73; --text-3:#8a90a5;
+  --border:rgba(20,24,40,.09); --border-2:rgba(20,24,40,.16);
+  --user-bubble:rgba(var(--accent-rgb),.1);
+  --code-bg:#14161d; --code-head:#1d2029;
+  --ok:#059669; --warn:#b45309; --err:#e11d48;
+  --glass:rgba(255,255,255,.8);
+  color-scheme:light;
+}
+
+/* ---------- 2) RESET / BASE ---------- */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  background:var(--bg); color:var(--text); overflow:hidden;
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+input,select,textarea{font:inherit;color:inherit}
+::selection{background:rgba(var(--accent-rgb),.35)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:99px}
+::-webkit-scrollbar-track{background:transparent}
+.hidden{display:none !important}
+.muted{color:var(--text-2)} .small{font-size:12px}
+kbd{background:var(--panel-3);border:1px solid var(--border-2);border-bottom-width:2px;border-radius:6px;padding:1px 6px;font-size:11px;font-family:inherit}
+
+/* ---------- 3) LAYOUT GENERAL ---------- */
+#app{display:flex;height:100vh;height:100dvh;overflow:hidden}
+#main{flex:1;min-width:0;display:flex;flex-direction:column;background:
+  radial-gradient(1200px 600px at 80% -10%, rgba(var(--accent-rgb),.09), transparent 60%),
+  var(--bg);}
+.view{display:none;flex:1;min-height:0;flex-direction:column}
+.view.active{display:flex}
+.page-scroll{flex:1;overflow-y:auto;padding:26px 30px 60px;scroll-behavior:smooth}
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:18px;flex-wrap:wrap}
+.page-head h2{font-size:24px;letter-spacing:-.02em;font-weight:700}
+.page-sub{color:var(--text-2);margin-top:4px;font-size:13.5px;max-width:640px}
+
+/* ---------- 4) SIDEBAR ---------- */
+#sidebar{width:272px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;z-index:60;transition:width .25s var(--ease),transform .25s var(--ease);position:relative}
+.brand{display:flex;align-items:center;gap:11px;padding:16px 16px 10px;min-height:62px}
+.brand-logo{width:34px;height:34px;flex-shrink:0;filter:drop-shadow(0 3px 10px rgba(var(--accent-rgb),.45))}
+.brand-name{font-weight:800;font-size:17px;letter-spacing:-.02em;white-space:nowrap}
+.brand-name em{font-style:normal;color:var(--accent-2)}
+.brand-tag{font-size:10.5px;color:var(--text-3);letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+.icon-btn{width:34px;height:34px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;color:var(--text-2);transition:background .15s,color .15s;position:relative;flex-shrink:0}
+.icon-btn:hover{background:var(--panel-3);color:var(--text)}
+#collapseBtn{margin-left:auto}
+.new-chat-btn{margin:6px 12px 10px;display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:var(--radius-sm);
+  background:linear-gradient(135deg,var(--accent),rgba(var(--accent-rgb),.75) 140%);color:var(--accent-contrast);
+  font-weight:600;font-size:13.5px;box-shadow:0 6px 18px rgba(var(--accent-rgb),.35);transition:transform .15s,box-shadow .15s;white-space:nowrap;overflow:hidden}
+.new-chat-btn:hover{transform:translateY(-1px);box-shadow:0 9px 24px rgba(var(--accent-rgb),.45)}
+.search-box{margin:0 12px 8px;display:flex;align-items:center;gap:8px;background:var(--panel-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 11px;transition:border-color .15s}
+.search-box:focus-within{border-color:rgba(var(--accent-rgb),.6)}
+.search-box input{flex:1;min-width:0;background:none;border:none;outline:none;font-size:13px;color:var(--text)}
+.search-box input::placeholder{color:var(--text-3)}
+.search-box kbd{flex-shrink:0}
+.conv-list{flex:1;overflow-y:auto;padding:2px 8px 10px}
+.conv-group{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text-3);padding:12px 10px 5px}
+.conv-item{display:flex;align-items:center;gap:6px;border-radius:var(--radius-sm);padding:8px 10px;cursor:pointer;position:relative;transition:background .15s;user-select:none}
+.conv-item:hover{background:var(--panel-2)}
+.conv-item.active{background:rgba(var(--accent-rgb),.14);box-shadow:inset 0 0 0 1px rgba(var(--accent-rgb),.35)}
+.conv-item-icon{color:var(--text-3);flex-shrink:0}
+.conv-item.active .conv-item-icon{color:var(--accent-2)}
+.conv-title{flex:1;min-width:0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.conv-actions{display:none;gap:2px;flex-shrink:0}
+.conv-item:hover .conv-actions,.conv-item:focus-within .conv-actions{display:flex}
+.conv-actions .icon-btn{width:26px;height:26px;border-radius:7px}
+.conv-actions .icon-btn svg{width:14px;height:14px}
+.conv-rename-input{flex:1;min-width:0;background:var(--panel-3);border:1px solid rgba(var(--accent-rgb),.5);border-radius:7px;padding:4px 8px;font-size:13px;outline:none}
+.conv-empty{text-align:center;color:var(--text-3);padding:34px 18px;font-size:13px;line-height:1.6}
+.sidebar-footer{border-top:1px solid var(--border);padding:10px 12px;display:flex;gap:8px}
+.side-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:9px 8px;border-radius:var(--radius-sm);
+  color:var(--text-2);font-size:12.5px;font-weight:600;border:1px solid var(--border);transition:all .15s;white-space:nowrap}
+.side-btn:hover{color:var(--text);border-color:var(--border-2);background:var(--panel-2)}
+.side-btn.active{color:var(--accent-2);border-color:rgba(var(--accent-rgb),.5);background:rgba(var(--accent-rgb),.1)}
+.side-badge{background:rgba(var(--accent-rgb),.25);color:var(--accent-2);border-radius:99px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:2px}
+#sidebarBackdrop{display:none;position:fixed;inset:0;background:rgba(5,6,10,.6);backdrop-filter:blur(3px);z-index:55}
+/* Modo colapsado (riel de iconos) en escritorio */
+body.sidebar-collapsed #sidebar{width:74px}
+body.sidebar-collapsed .brand-name,body.sidebar-collapsed .brand-tag,body.sidebar-collapsed #collapseBtn svg,
+body.sidebar-collapsed .new-chat-btn span.txt,body.sidebar-collapsed .search-box,body.sidebar-collapsed .conv-list,
+body.sidebar-collapsed .side-btn span.txt,body.sidebar-collapsed .side-badge{display:none}
+body.sidebar-collapsed .brand{justify-content:center;padding-left:0;padding-right:0}
+body.sidebar-collapsed #collapseBtn{margin:0;position:absolute;right:-13px;background:var(--panel-3);border:1px solid var(--border-2);width:26px;height:26px;box-shadow:var(--shadow)}
+body.sidebar-collapsed .new-chat-btn{justify-content:center;padding:11px 0;margin-left:10px;margin-right:10px}
+body.sidebar-collapsed .sidebar-footer{flex-direction:column}
+body.sidebar-collapsed .side-btn{padding:11px 0}
+/* ---------- 5) TOPBAR ---------- */
+#topbar{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--glass);backdrop-filter:blur(12px);min-height:56px;position:relative;z-index:30}
+#menuToggle{display:none}
+.model-wrap{display:flex;align-items:center;gap:8px;background:var(--panel-2);border:1px solid var(--border);border-radius:99px;padding:5px 8px 5px 12px;transition:border-color .15s}
+.model-wrap:hover,.model-wrap:focus-within{border-color:var(--border-2)}
+.provider-dot{width:8px;height:8px;border-radius:99px;background:var(--ok);box-shadow:0 0 8px var(--ok);flex-shrink:0}
+.provider-dot.openai{background:#10a37f;box-shadow:0 0 8px #10a37f}
+.provider-dot.anthropic{background:#d97757;box-shadow:0 0 8px #d97757}
+#modelSelect{background:none;border:none;outline:none;font-size:12.5px;font-weight:600;color:var(--text);max-width:210px;cursor:pointer}
+#modelSelect option{background:var(--panel-2);color:var(--text)}
+#customModelInline{background:var(--panel-2);border:1px solid var(--border-2);border-radius:99px;padding:6px 12px;font-size:12px;outline:none;width:170px}
+.topbar-spacer{flex:1}
+.google-quick{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;padding:7px 14px;border-radius:99px;border:1px solid var(--border-2);color:var(--text-2);transition:all .15s}
+.google-quick:hover{border-color:rgba(var(--accent-rgb),.5);color:var(--text)}
+.google-quick.connected{color:var(--ok);border-color:rgba(52,211,153,.35);background:rgba(52,211,153,.07)}
+
+/* ---------- 6) CHAT ---------- */
+#viewChat{position:relative}
+#chatScroll{flex:1;overflow-y:auto;scroll-behavior:smooth}
+#chatInner{max-width:880px;margin:0 auto;padding:20px 22px 12px}
+/* Bienvenida */
+#welcome{max-width:880px;margin:0 auto;padding:48px 24px 20px;text-align:center;animation:fadeUp .5s var(--ease)}
+#welcome .welcome-logo{width:72px;height:72px;margin:0 auto 18px;filter:drop-shadow(0 8px 26px rgba(var(--accent-rgb),.5));animation:float 4s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+#welcome h1{font-size:clamp(26px,4.5vw,34px);letter-spacing:-.03em;font-weight:800;background:linear-gradient(120deg,var(--text) 30%,var(--accent-2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+#welcome p.lead{color:var(--text-2);margin:10px auto 26px;max-width:520px;font-size:14.5px;line-height:1.6}
+.starter-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;max-width:760px;margin:0 auto}
+.starter{text-align:left;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:14px 15px;display:flex;gap:12px;align-items:flex-start;transition:transform .18s,border-color .18s,box-shadow .18s}
+.starter:hover{transform:translateY(-3px);border-color:rgba(var(--accent-rgb),.45);box-shadow:0 12px 32px rgba(0,0,0,.28)}
+.starter-ic{font-size:20px;width:38px;height:38px;border-radius:10px;background:var(--panel-3);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.starter strong{display:block;font-size:13px;margin-bottom:3px}
+.starter small{color:var(--text-2);font-size:11.5px;line-height:1.5}
+.privacy-mini{margin-top:26px;font-size:11.5px;color:var(--text-3)}
+.privacy-mini button{color:var(--accent-2);font-weight:600}
+/* Mensajes */
+.msg{display:flex;gap:13px;padding:18px 6px;border-bottom:1px solid var(--border);animation:msgIn .3s var(--ease)}
+@keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.msg:last-child{border-bottom:none}
+.avatar{width:32px;height:32px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.avatar-user{background:var(--user-bubble);color:var(--accent-2);border:1px solid rgba(var(--accent-rgb),.3)}
+.avatar-ai{background:linear-gradient(135deg,var(--accent),rgba(var(--accent-rgb),.7));color:#fff}
+.msg-body{flex:1;min-width:0}
+.msg-meta{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:11px;color:var(--text-3);font-weight:600}
+.msg-meta .model-tag{background:var(--panel-3);border-radius:99px;padding:1px 8px;font-size:10px;color:var(--text-2)}
+.msg-text{font-size:var(--chat-fs);line-height:1.72;word-wrap:break-word;overflow-wrap:break-word}
+.msg-text p{margin:0 0 10px}.msg-text p:last-child{margin-bottom:0}
+.msg-text h1,.msg-text h2,.msg-text h3,.msg-text h4{margin:16px 0 8px;letter-spacing:-.01em;line-height:1.3}
+.msg-text h1{font-size:1.45em}.msg-text h2{font-size:1.25em}.msg-text h3{font-size:1.1em}
+.msg-text ul,.msg-text ol{margin:4px 0 12px 22px}.msg-text li{margin:4px 0}
+.msg-text blockquote{border-left:3px solid var(--accent);padding:4px 14px;margin:10px 0;color:var(--text-2);background:rgba(var(--accent-rgb),.06);border-radius:0 8px 8px 0}
+.msg-text a{color:var(--accent-2);text-decoration:none;border-bottom:1px solid rgba(var(--accent-rgb),.4)}
+.msg-text a:hover{border-bottom-color:var(--accent-2)}
+.msg-text hr{border:none;border-top:1px solid var(--border-2);margin:14px 0}
+.msg-text table{border-collapse:collapse;margin:10px 0;font-size:.92em;display:block;overflow-x:auto;max-width:100%}
+.msg-text th,.msg-text td{border:1px solid var(--border-2);padding:6px 12px;text-align:left}
+.msg-text th{background:var(--panel-2);font-size:.9em;text-transform:uppercase;letter-spacing:.04em}
+.msg-text code{background:var(--panel-3);border:1px solid var(--border);border-radius:6px;padding:1px 6px;font-size:.88em;font-family:'SFMono-Regular',Consolas,Menlo,monospace}
+.msg-text strong{font-weight:700}
+/* Bloques de código */
+.code-block{margin:12px 0;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border-2);box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.code-head{display:flex;align-items:center;justify-content:space-between;background:var(--code-head);padding:7px 12px;font-size:11px;color:#a7b0c5;font-family:Consolas,monospace;letter-spacing:.05em}
+.code-copy-btn{display:flex;align-items:center;gap:6px;font-size:11px;color:#c3cadb;padding:3px 9px;border-radius:6px;border:1px solid rgba(255,255,255,.12);transition:all .15s}
+.code-copy-btn:hover{background:rgba(255,255,255,.08);color:#fff}
+.code-block pre{background:var(--code-bg);padding:14px 16px;overflow-x:auto}
+.code-block pre code{background:none;border:none;padding:0;color:#e2e8f0;font-size:12.5px;line-height:1.65;font-family:'SFMono-Regular',Consolas,Menlo,monospace}
+/* Acciones bajo mensaje */
+.msg-actions{display:flex;gap:4px;margin-top:8px;opacity:0;transition:opacity .2s}
+.msg:hover .msg-actions,.msg-actions:focus-within{opacity:1}
+.msg-actions .icon-btn{width:28px;height:28px;border-radius:7px}
+.msg-actions .icon-btn svg{width:15px;height:15px}
+/* Error dentro del chat */
+.msg-error{border:1px solid rgba(251,113,133,.35);background:rgba(251,113,133,.08);color:var(--err);border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;margin-top:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.msg-error button{color:#fff;background:var(--err);border-radius:8px;padding:5px 14px;font-size:12px;font-weight:600}
+/* Indicador "escribiendo" */
+.typing-dots{display:inline-flex;gap:5px;padding:6px 2px}
+.typing-dots span{width:7px;height:7px;border-radius:99px;background:var(--text-3);animation:blink 1.2s infinite}
+.typing-dots span:nth-child(2){animation-delay:.18s}.typing-dots span:nth-child(3){animation-delay:.36s}
+@keyframes blink{0%,80%,100%{opacity:.25;transform:scale(.85)}40%{opacity:1;transform:scale(1.15)}}
+
+/* ---------- 7) SUGERENCIAS DE CONECTORES / COMPOSER ---------- */
+#suggestBar{max-width:880px;margin:0 auto;width:100%;padding:4px 22px 0;display:flex;flex-direction:column;gap:8px}
+#activeContextBar{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.active-ctx{display:flex;align-items:center;gap:6px;background:rgba(var(--accent-rgb),.15);border:1px solid rgba(var(--accent-rgb),.4);color:var(--accent-2);border-radius:99px;padding:4px 8px 4px 12px;font-size:11px;font-weight:600}
+.active-ctx button{display:flex;color:inherit;opacity:.75}.active-ctx button:hover{opacity:1}
+.sugg-label{font-size:10.5px;color:var(--text-3);text-transform:uppercase;letter-spacing:.09em;font-weight:700;display:flex;align-items:center;gap:6px}
+#suggestionChips{display:flex;gap:8px;flex-wrap:wrap}
+.sugg-chip{display:flex;align-items:center;gap:9px;background:var(--panel);border:1px solid var(--border-2);border-radius:12px;padding:7px 9px;max-width:300px;transition:all .18s;cursor:pointer;text-align:left}
+.sugg-chip:hover{border-color:rgba(var(--accent-rgb),.55);transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,.25)}
+.sugg-chip.in-context{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 8px 22px rgba(var(--accent-rgb),.25)}
+.sugg-ic{width:28px;height:28px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.sugg-ic svg{width:22px;height:22px}
+.sugg-txt{min-width:0}
+.sugg-txt b{display:block;font-size:12px;line-height:1.3}
+.sugg-txt em{display:block;font-style:normal;font-size:10.5px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px}
+.sugg-action{flex-shrink:0;font-size:11px;font-weight:700;padding:6px 11px;border-radius:8px;background:rgba(var(--accent-rgb),.18);color:var(--accent-2);transition:background .15s;white-space:nowrap}
+.sugg-action:hover{background:rgba(var(--accent-rgb),.3)}
+.sugg-action.connected{background:rgba(52,211,153,.15);color:var(--ok)}
+#composerWrap{border-top:1px solid var(--border);background:var(--glass);backdrop-filter:blur(12px);padding:10px 16px 12px}
+#composerInner{max-width:880px;margin:0 auto}
+.composer-box{display:flex;align-items:flex-end;gap:10px;background:var(--panel-2);border:1px solid var(--border-2);border-radius:var(--radius-lg);padding:10px 12px 10px 18px;transition:border-color .2s,box-shadow .2s;box-shadow:0 10px 34px rgba(0,0,0,.3)}
+.composer-box:focus-within{border-color:rgba(var(--accent-rgb),.6);box-shadow:0 0 0 3px rgba(var(--accent-rgb),.18),0 10px 34px rgba(0,0,0,.3)}
+#promptInput{flex:1;background:none;border:none;outline:none;resize:none;max-height:220px;min-height:26px;padding:4px 0;font-size:15px;line-height:1.55;color:var(--text)}
+#promptInput::placeholder{color:var(--text-3)}
+.send-btn{width:40px;height:40px;border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--accent),rgba(var(--accent-rgb),.7));color:#fff;transition:transform .15s,opacity .15s;box-shadow:0 4px 14px rgba(var(--accent-rgb),.4)}
+.send-btn:hover{transform:scale(1.06)}
+.send-btn:disabled{opacity:.35;transform:none;cursor:not-allowed;box-shadow:none}
+.send-btn.stop{background:var(--err);box-shadow:0 4px 14px rgba(251,113,133,.4)}
+.composer-foot{display:flex;justify-content:space-between;gap:12px;padding:8px 4px 0;font-size:10.5px;color:var(--text-3);flex-wrap:wrap}
+/* ---------- 8) CENTRO DE CONECTORES ---------- */
+.notice-banner{display:flex;gap:12px;align-items:flex-start;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);border-radius:var(--radius);padding:12px 16px;margin-bottom:16px;font-size:12.5px;line-height:1.6;color:var(--warn)}
+.notice-banner svg{flex-shrink:0;margin-top:2px}
+.notice-banner b{color:var(--warn)}
+.google-hero{display:flex;align-items:center;justify-content:space-between;gap:18px;background:linear-gradient(135deg,var(--panel) 0%,rgba(var(--accent-rgb),.09) 130%);border:1px solid var(--border-2);border-radius:var(--radius-lg);padding:18px 22px;margin-bottom:20px;flex-wrap:wrap;position:relative;overflow:hidden}
+.google-hero::after{content:"";position:absolute;right:-60px;top:-60px;width:220px;height:220px;background:radial-gradient(circle,rgba(var(--accent-rgb),.22),transparent 65%);pointer-events:none}
+.gh-left{display:flex;gap:16px;align-items:center}
+.gh-left h3{font-size:16px;letter-spacing:-.01em}
+.gh-left p{font-size:12.5px;color:var(--text-2);margin-top:3px;max-width:440px;line-height:1.55}
+.gh-status{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;margin-top:8px;color:var(--text-3);text-transform:uppercase;letter-spacing:.07em}
+.gh-status.on{color:var(--ok)}
+.gh-status .dot{width:8px;height:8px;border-radius:99px;background:currentColor}
+.gh-scopes{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;max-width:460px}
+.scope-tag{font-size:10px;background:var(--panel-3);border:1px solid var(--border);border-radius:6px;padding:2px 7px;color:var(--text-2)}
+.btn{display:inline-flex;align-items:center;gap:8px;border-radius:var(--radius-sm);padding:9px 16px;font-size:13px;font-weight:600;transition:all .15s;border:1px solid transparent;white-space:nowrap}
+.btn-primary{background:linear-gradient(135deg,var(--accent),rgba(var(--accent-rgb),.75));color:var(--accent-contrast);box-shadow:0 5px 16px rgba(var(--accent-rgb),.35)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(var(--accent-rgb),.45)}
+.btn-ghost{color:var(--text-2);border-color:var(--border-2)}
+.btn-ghost:hover{color:var(--text);background:var(--panel-2)}
+.btn-danger{background:rgba(251,113,133,.12);color:var(--err);border-color:rgba(251,113,133,.35)}
+.btn-danger:hover{background:rgba(251,113,133,.2)}
+.btn-sm{padding:7px 12px;font-size:12px;border-radius:8px}
+.btn[disabled]{opacity:.5;cursor:not-allowed;transform:none}
+.google-btn{display:inline-flex;align-items:center;gap:10px;background:#fff;color:#1f1f1f;border-radius:99px;padding:10px 22px;font-size:13px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.35);transition:transform .15s,box-shadow .15s}
+.google-btn:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,.4)}
+.cc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(272px,1fr));gap:14px;margin-bottom:28px}
+.connector-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:15px 16px 13px;display:flex;flex-direction:column;gap:9px;transition:border-color .2s,box-shadow .2s,transform .2s;position:relative}
+.connector-card:hover{border-color:var(--border-2);transform:translateY(-2px)}
+.connector-card.flash{animation:cardFlash 2.2s var(--ease)}
+@keyframes cardFlash{0%,100%{box-shadow:0 0 0 0 transparent;border-color:var(--border)}20%,60%{box-shadow:0 0 0 3px var(--accent);border-color:var(--accent)}}
+.cc-head{display:flex;align-items:center;gap:11px}
+.cc-icon{width:42px;height:42px;border-radius:11px;background:var(--panel-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cc-icon svg{width:24px;height:24px}
+.cc-name{font-size:13.5px;font-weight:700;letter-spacing:-.01em}
+.cc-cat{font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.07em;font-weight:600}
+.cc-status{margin-left:auto;font-size:9.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:4px 9px;border-radius:99px;flex-shrink:0}
+.st-connected{background:rgba(52,211,153,.13);color:var(--ok)}
+.st-demo{background:rgba(251,191,36,.14);color:var(--warn)}
+.st-disconnected{background:var(--panel-3);color:var(--text-3)}
+.cc-desc{font-size:12px;color:var(--text-2);line-height:1.6;min-height:38px}
+.cc-demo-note{font-size:10.5px;line-height:1.55;color:var(--warn);background:rgba(251,191,36,.07);border:1px dashed rgba(251,191,36,.35);border-radius:8px;padding:7px 10px}
+.cc-panel{display:none;flex-direction:column;gap:8px;background:var(--panel-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-top:2px}
+.cc-panel.open{display:flex;animation:fadeUp .25s var(--ease)}
+.field{width:100%;background:var(--panel-3);border:1px solid var(--border-2);border-radius:9px;padding:9px 12px;font-size:12.5px;outline:none;transition:border-color .15s}
+.field:focus{border-color:rgba(var(--accent-rgb),.6)}
+.field::placeholder{color:var(--text-3)}
+select.field option{background:var(--panel-2)}
+.field-label{font-size:11px;font-weight:700;color:var(--text-2);margin-bottom:4px;display:flex;justify-content:space-between;gap:8px}
+.cc-panel-row,.cc-foot{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.cc-foot{margin-top:auto;padding-top:4px;justify-content:space-between;border-top:1px solid var(--border)}
+.cc-foot-left{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.link-mini{font-size:11px;color:var(--text-3);display:inline-flex;align-items:center;gap:5px;text-decoration:none;transition:color .15s}
+.link-mini:hover{color:var(--accent-2)}
+.quick-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
+.quick-btn{font-size:10.5px;font-weight:600;color:var(--accent-2);background:rgba(var(--accent-rgb),.1);border:1px solid rgba(var(--accent-rgb),.3);padding:5px 10px;border-radius:7px;transition:all .15s;display:inline-flex;gap:5px;align-items:center}
+.quick-btn:hover{background:rgba(var(--accent-rgb),.2)}
+/* Sección personalizada */
+.custom-section{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 22px}
+.custom-section h3{font-size:15px;letter-spacing:-.01em}
+.custom-form{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.custom-form .full{grid-column:1/-1}
+.custom-form-actions{grid-column:1/-1;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.custom-list{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.custom-item{display:flex;align-items:center;gap:12px;background:var(--panel-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px}
+.custom-item-info{flex:1;min-width:0}
+.custom-item-info b{font-size:12.5px}
+.custom-item-info small{display:block;color:var(--text-3);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+
+/* ---------- 9) AJUSTES ---------- */
+.settings-wrap{max-width:820px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.settings-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 22px}
+.settings-card > h3{font-size:15px;display:flex;align-items:center;gap:10px;margin-bottom:4px;letter-spacing:-.01em}
+.settings-card > .card-sub{font-size:12px;color:var(--text-2);margin-bottom:14px;line-height:1.6}
+.setting-row{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:11px 0;border-top:1px solid var(--border)}
+.setting-row:first-of-type{border-top:none;padding-top:6px}
+.setting-info b{font-size:13px;font-weight:600;display:block}
+.setting-info small{font-size:11px;color:var(--text-2);line-height:1.5;display:block;margin-top:2px}
+.seg{display:flex;background:var(--panel-2);border:1px solid var(--border);border-radius:10px;padding:3px;gap:2px}
+.seg button{display:flex;align-items:center;gap:6px;padding:7px 13px;border-radius:8px;font-size:12px;font-weight:600;color:var(--text-2);transition:all .15s}
+.seg button.active{background:var(--panel-3);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.accent-swatches{display:flex;gap:10px;flex-wrap:wrap}
+.swatch{width:36px;height:36px;border-radius:99px;border:2px solid transparent;transition:transform .15s,box-shadow .15s;position:relative}
+.swatch:hover{transform:scale(1.15)}
+.swatch.active{border-color:var(--text);box-shadow:0 0 0 3px var(--bg),0 0 0 5px var(--accent)}
+.key-input-wrap{display:flex;gap:8px;align-items:center}
+.key-input-wrap .field{font-family:Consolas,monospace;letter-spacing:.03em}
+.temp-row{display:flex;align-items:center;gap:10px}
+input[type="range"]{accent-color:var(--accent);width:150px}
+.temp-val{font-size:12px;font-weight:700;background:var(--panel-3);border-radius:6px;padding:3px 8px;min-width:38px;text-align:center}
+.textarea-field{width:100%;min-height:88px;background:var(--panel-2);border:1px solid var(--border-2);border-radius:var(--radius-sm);padding:11px 13px;font-size:13px;line-height:1.6;outline:none;resize:vertical}
+.textarea-field:focus{border-color:rgba(var(--accent-rgb),.6)}
+.char-count{font-size:10.5px;color:var(--text-3);text-align:right;margin-top:4px}
+.privacy-note{background:rgba(var(--accent-rgb),.06);border:1px solid rgba(var(--accent-rgb),.25);border-radius:var(--radius-sm);padding:12px 15px;font-size:12px;line-height:1.7;color:var(--text-2)}
+.privacy-note b{color:var(--text)}
+.privacy-note li{margin:5px 0 0 18px}
+.privacy-note ul{margin:6px 0}
+.shortcuts-table{width:100%;font-size:12px;border-collapse:collapse}
+.shortcuts-table td{padding:6px 4px;border-top:1px solid var(--border)}
+.shortcuts-table td:first-child{white-space:nowrap}
+.danger-zone{border-color:rgba(251,113,133,.35)}
+.settings-footer{text-align:center;font-size:11px;color:var(--text-3);padding:8px 0 20px}
+
+/* ---------- 10) MODAL y TOASTS ---------- */
+#modalOverlay{position:fixed;inset:0;z-index:100;background:rgba(4,5,9,.65);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .2s var(--ease)}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{background:var(--panel);border:1px solid var(--border-2);border-radius:var(--radius-lg);max-width:480px;width:100%;max-height:82vh;overflow-y:auto;box-shadow:var(--shadow);animation:modalIn .28s var(--ease)}
+.modal.wide{max-width:560px}
+@keyframes modalIn{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:none}}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 0}
+.modal-head h3{font-size:16px;letter-spacing:-.01em}
+.modal-body{padding:14px 20px;font-size:13px;color:var(--text-2);line-height:1.65}
+.modal-body b{color:var(--text)}
+.modal-foot{display:flex;justify-content:flex-end;gap:10px;padding:0 20px 18px}
+.result-list{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.result-item{display:flex;align-items:center;gap:9px;background:var(--panel-2);border:1px solid var(--border);border-radius:9px;padding:8px 12px;font-size:12px;min-width:0}
+.result-item a{color:var(--accent-2);text-decoration:none;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.result-item small{color:var(--text-3);flex-shrink:0}
+#toastRoot{position:fixed;bottom:22px;right:22px;z-index:120;display:flex;flex-direction:column;gap:10px}
+.toast{display:flex;align-items:center;gap:11px;background:var(--panel-2);border:1px solid var(--border-2);border-left:4px solid var(--accent);border-radius:12px;padding:11px 16px;font-size:13px;max-width:360px;box-shadow:var(--shadow);animation:toastIn .3s var(--ease)}
+@keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
+.toast.success{border-left-color:var(--ok)} .toast.error{border-left-color:var(--err)} .toast.warn{border-left-color:var(--warn)}
+.toast-icon{flex-shrink:0;display:flex}
+.toast.success .toast-icon{color:var(--ok)} .toast.error .toast-icon{color:var(--err)} .toast.warn .toast-icon{color:var(--warn)} .toast.info .toast-icon{color:var(--accent-2)}
+.toast.leaving{opacity:0;transform:translateX(30px);transition:all .3s}
+
+/* ---------- 11) DENSIDAD / TAMAÑO DE LETRA ---------- */
+html[data-font="sm"]{--chat-fs:13px}
+html[data-font="md"]{--chat-fs:15px}
+html[data-font="lg"]{--chat-fs:17px}
+html[data-density="compact"] .msg{padding:11px 6px;gap:10px}
+html[data-density="compact"] .conv-item{padding:5px 10px}
+html[data-density="compact"] .page-scroll{padding:16px 18px 44px}
+html[data-density="compact"] .settings-card{padding:14px 17px}
+html[data-density="compact"] .connector-card{padding:12px 13px 11px;gap:7px}
+html[data-density="compact"] #chatInner{padding-top:12px}
+
+/* ---------- 12) RESPONSIVE ---------- */
+@media (max-width:920px){
+  #sidebar{position:fixed;left:0;top:0;bottom:0;transform:translateX(-105%);box-shadow:var(--shadow);width:280px !important}
+  body.sidebar-open #sidebar{transform:none}
+  body.sidebar-open #sidebarBackdrop{display:block}
+  body.sidebar-collapsed #collapseBtn{display:none}
+  #menuToggle{display:inline-flex}
+  .google-quick{display:none}
+  #modelSelect{max-width:130px}
+  .page-scroll{padding:18px 14px 48px}
+  .custom-form{grid-template-columns:1fr}
+  .starter-grid{grid-template-columns:1fr}
+  .composer-foot .kbd-hint{display:none}
+  #suggestionChips{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}
+  .sugg-chip{flex-shrink:0}
+}
+@media (max-width:560px){
+  #topbar{padding:8px 10px;gap:6px}
+  #customModelInline{width:110px}
+  .msg{padding:12px 2px;gap:9px}
+  .avatar{width:27px;height:27px;font-size:11px}
+  .msg-actions{opacity:1}
+}
+
+/* ---------- 13) ACCESIBILIDAD ---------- */
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001s !important;transition-duration:.001s !important}}
+@media (prefers-contrast:more){.msg-text{line-height:1.85}.field,.search-box,.composer-box{border-width:2px}}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ════════════ SIDEBAR ════════════ -->
+  <aside id="sidebar" aria-label="Barra lateral de navegación">
+    <div class="brand">
+      <!-- Logotipo: órbita + destello -->
+      <svg class="brand-logo" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+        <defs><linearGradient id="lgA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b5cf6"/><stop offset=".55" stop-color="#7c3aed"/><stop offset="1" stop-color="#2563eb"/></linearGradient></defs>
+        <rect width="64" height="64" rx="15" fill="url(#lgA)"/>
+        <ellipse cx="32" cy="32" rx="21" ry="8.5" stroke="rgba(255,255,255,.55)" stroke-width="2" transform="rotate(-24 32 32)"/>
+        <path fill="#fff" d="M32 12.5l4.6 11.9 11.9 4.6-11.9 4.6L32 45.5l-4.6-11.9-11.9-4.6 11.9-4.6L32 12.5z"/>
+        <circle cx="49" cy="18" r="3.4" fill="#fff"/>
+      </svg>
+      <div>
+        <div class="brand-name">Nexus<em>AI</em></div>
+        <div class="brand-tag" data-i18n="brand.tag">Hub de IA</div>
+      </div>
+      <button id="collapseBtn" class="icon-btn" aria-label="Colapsar barra lateral" title="Colapsar barra lateral (Ctrl+/)">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+
+    <button id="newChatBtn" class="new-chat-btn" aria-label="Nueva conversación">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+      <span class="txt" data-i18n="nav.newChat">Nueva conversación</span>
+    </button>
+
+    <div class="search-box" role="search">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="color:var(--text-3);flex-shrink:0"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input id="searchInput" type="text" data-i18n-ph="search.ph" placeholder="Buscar conversaciones…" aria-label="Buscar conversaciones" />
+      <kbd>Ctrl K</kbd>
+    </div>
+
+    <nav id="conversationList" class="conv-list" aria-label="Historial de conversaciones"></nav>
+
+    <div class="sidebar-footer">
+      <button class="side-btn" id="navConnectors" aria-label="Centro de conectores">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6M15 2v6M7 8h10v4a5 5 0 0 1-10 0V8z"/><path d="M12 17v5"/></svg>
+        <span class="txt" data-i18n="nav.connectors">Conectores</span><span class="side-badge" id="connBadge">0</span>
+      </button>
+      <button class="side-btn" id="navSettings" aria-label="Ajustes">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.01a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.01a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"/></svg>
+        <span class="txt" data-i18n="nav.settings">Ajustes</span>
+      </button>
+    </div>
+  </aside>
+  <div id="sidebarBackdrop" aria-hidden="true"></div>
+
+  <!-- ════════════ ÁREA PRINCIPAL ════════════ -->
+  <main id="main">
+
+    <!-- Topbar: selector de modelo + acciones rápidas -->
+    <header id="topbar">
+      <button id="menuToggle" class="icon-btn" aria-label="Abrir menú">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <div class="model-wrap" title="Proveedor y modelo de IA">
+        <span class="provider-dot anthropic" id="providerDot" aria-hidden="true"></span>
+        <select id="modelSelect" aria-label="Seleccionar modelo"></select>
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-3)"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <input id="customModelInline" class="hidden" placeholder="modelo-personalizado" aria-label="Nombre del modelo personalizado" spellcheck="false">
+      <div class="topbar-spacer"></div>
+      <button id="quickGoogleBtn" class="google-quick" aria-label="Conexión con Google">
+        <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.3c0-.9-.1-1.5-.3-2.2H12v4h6.5c-.1 1.1-.8 2.7-2.4 3.8l3.9 3c2.4-2.2 3.5-5.4 3.5-8.6z"/><path fill="#34A853" d="M12 24c3.2 0 5.9-1.1 7.9-2.9l-3.9-3c-1 .7-2.4 1.2-4 1.2-3.1 0-5.7-2-6.6-4.8l-4 3.1C3.3 21.3 7.3 24 12 24z"/><path fill="#FBBC05" d="M5.4 14.5c-.2-.7-.4-1.5-.4-2.5s.1-1.7.4-2.5l-4-3.1C.5 8.4 0 10.1 0 12s.5 3.6 1.3 5.6l4.1-3.1z"/><path fill="#EB4335" d="M12 4.7c1.8 0 3 .8 3.7 1.4l2.7-2.7C17.9 1.8 15.2 0 12 0 7.3 0 3.3 2.7 1.3 6.4l4.1 3.1c.9-2.8 3.5-4.8 6.6-4.8z"/></svg>
+        <span id="quickGoogleTxt">Google</span>
+      </button>
+      <button id="quickThemeBtn" class="icon-btn" aria-label="Cambiar tema claro/oscuro" title="Cambiar tema">
+        <svg id="iconMoon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        <svg id="iconSun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:none"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </button>
+    </header>
+
+    <!-- ════════ VISTA: CHAT ════════ -->
+    <section id="viewChat" class="view active" aria-label="Chat con IA">
+      <div id="chatScroll">
+        <div id="chatInner">
+          <!-- Pantalla de bienvenida (visible con conversación vacía) -->
+          <div id="welcome">
+            <svg class="welcome-logo" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+              <defs><linearGradient id="lgB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8b5cf6"/><stop offset=".55" stop-color="#7c3aed"/><stop offset="1" stop-color="#2563eb"/></linearGradient></defs>
+              <rect width="64" height="64" rx="16" fill="url(#lgB)"/>
+              <ellipse cx="32" cy="32" rx="22" ry="9" stroke="rgba(255,255,255,.55)" stroke-width="2" transform="rotate(-24 32 32)"/>
+              <path fill="#fff" d="M32 11l5 13 13 5-13 5-5 13-5-13-13-5 13-5 5-13z"/>
+            </svg>
+            <h1 data-i18n="welcome.title">¿En qué puedo ayudarte hoy?</h1>
+            <p class="lead" data-i18n="welcome.lead">Soy Nexus AI. Converso, redacto, programo… y puedo trabajar con tus apps favoritas si las conectas en el Centro de conectores.</p>
+            <div class="starter-grid" id="starterGrid"></div>
+            <p class="privacy-mini"><span data-i18n="welcome.privacy">Tus claves y datos nunca salen de tu navegador.</span> · <button id="welcomeSettingsBtn" data-i18n="welcome.openSettings">Abre Ajustes →</button></p>
+          </div>
+          <!-- Mensajes de la conversación -->
+          <div id="messages" aria-live="polite"></div>
+        </div>
+      </div>
+
+      <!-- Barra de sugerencias de conectores (detección inteligente) -->
+      <div id="suggestBar" aria-label="Conectores sugeridos">
+        <div id="activeContextBar" class="hidden"></div>
+        <div id="suggestionWrap" class="hidden">
+          <div class="sugg-label">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M5.6 5.6l2.1 2.1M3 12h3M5.6 18.4l2.1-2.1M12 18v3M18.4 18.4l-2.1-2.1M21 12h-3M18.4 5.6l-2.1 2.1"/><circle cx="12" cy="12" r="4"/></svg>
+            <span data-i18n="suggest.label">Conectores sugeridos para esto</span>
+          </div>
+          <div id="suggestionChips"></div>
+        </div>
+      </div>
+
+      <!-- Composer -->
+      <div id="composerWrap">
+        <div id="composerInner">
+          <form id="composer" autocomplete="off">
+            <div class="composer-box">
+              <textarea id="promptInput" rows="1" data-i18n-ph="composer.ph" placeholder="Escribe tu mensaje… (la IA detecta qué conectar)" aria-label="Mensaje para la IA"></textarea>
+              <button type="submit" id="sendBtn" class="send-btn" aria-label="Enviar mensaje">
+                <svg id="iconSend" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                <svg id="iconStop" viewBox="0 0 24 24" width="17" height="17" fill="currentColor" style="display:none"><rect x="6" y="6" width="12" height="12" rx="2.5"/></svg>
+              </button>
+            </div>
+            <div class="composer-foot">
+              <span id="composerStatus" data-i18n="composer.ready">Listo para enviar</span>
+              <span class="kbd-hint"><kbd>Enter</kbd> <span data-i18n="kbd.send">enviar</span> · <kbd>Shift</kbd>+<kbd>Enter</kbd> <span data-i18n="kbd.newline">salto de línea</span> · <kbd>Ctrl</kbd>+<kbd>K</kbd> <span data-i18n="kbd.search">buscar</span></span>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+    <!-- ════════ VISTA: CENTRO DE CONECTORES ════════ -->
+    <section id="viewConnectors" class="view" aria-label="Centro de conectores">
+      <div class="page-scroll">
+        <div class="page-head">
+          <div>
+            <h2 data-i18n="conn.title">Centro de conectores</h2>
+            <p class="page-sub" data-i18n="conn.sub">Conecta Nexus AI con tus aplicaciones. La IA detecta cuándo usarlos y tú mantienes el control. Las claves se guardan solo en tu navegador.</p>
+          </div>
+          <span class="badge st-connected" id="connSummary" style="font-size:11px;padding:6px 14px;border-radius:99px">0 conectados</span>
+        </div>
+
+        <!-- Aviso honesto sobre integraciones que requieren backend -->
+        <div class="notice-banner" role="note">
+          <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+          <span><b data-i18n="notice.title">Aviso honesto:</b> <span data-i18n="notice.body">Canva y Notion exigen un intercambio OAuth en servidor seguro, imposible de completar 100% desde el navegador. Para ellas (y para probar sin claves reales) activamos un <b>modo demo</b> claramente etiquetado: la IA simula las acciones y las marca como [DEMO]. Google, GitHub, Dropbox, Trello y Asana sí funcionan con llamadas reales desde tu navegador.</span></span>
+        </div>
+
+        <!-- Tarjeta héroe de Google Workspace -->
+        <div class="google-hero">
+          <div class="gh-left">
+            <svg viewBox="0 0 48 48" width="52" height="52" aria-hidden="true"><path fill="#4285F4" d="M45.5 24.5c0-1.6-.1-3.1-.5-4.6H24v8.7h12.1c-.5 2.8-2.1 5.2-4.6 6.8l7.4 5.8c4.4-4.1 7-10.1 7-16.7z"/><path fill="#34A853" d="M24 46c6 0 11.1-2 14.8-5.4l-7.4-5.8c-2 1.4-4.6 2.2-7.4 2.2-5.8 0-10.7-3.8-12.5-9.1l-7.7 6C7.6 41 15.2 46 24 46z"/><path fill="#FBBC05" d="M11.5 28c-.5-1.4-.7-2.9-.7-4.4s.2-3 .7-4.4l-7.7-6C2.3 17 1 20.3 1 24s1.3 7 2.8 9.8l7.7-5.8z"/><path fill="#EB4335" d="M24 10.5c3.3 0 6.2 1.1 8.6 3.3l6.4-6.4C35 3.8 29.9 1 24 1 15.2 1 7.6 6 3.8 14.2l7.7 6c1.8-5.3 6.7-9.7 12.5-9.7z"/></svg>
+            <div>
+              <h3>Google Workspace</h3>
+              <p data-i18n="gh.body">Una sola conexión segura (OAuth 2.0 con Google Identity Services) habilita Drive, Gmail, Calendar, Docs y Sheets.</p>
+              <div class="gh-status" id="googleStatus"><span class="dot"></span><span id="googleStatusTxt">No conectado</span></div>
+              <div class="gh-scopes"><span class="scope-tag">Calendar · lectura</span><span class="scope-tag">Gmail · lectura</span><span class="scope-tag">Drive · metadatos</span><span class="scope-tag">Docs · crear</span><span class="scope-tag">Sheets · crear</span></div>
+            </div>
+          </div>
+          <div class="gh-right" style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
+            <button id="googleConnectBtn" class="google-btn">
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.3c0-.9-.1-1.5-.3-2.2H12v4h6.5c-.1 1.1-.8 2.7-2.4 3.8l3.9 3c2.4-2.2 3.5-5.4 3.5-8.6z"/><path fill="#34A853" d="M12 24c3.2 0 5.9-1.1 7.9-2.9l-3.9-3c-1 .7-2.4 1.2-4 1.2-3.1 0-5.7-2-6.6-4.8l-4 3.1C3.3 21.3 7.3 24 12 24z"/><path fill="#FBBC05" d="M5.4 14.5c-.2-.7-.4-1.5-.4-2.5s.1-1.7.4-2.5l-4-3.1C.5 8.4 0 10.1 0 12s.5 3.6 1.3 5.6l4.1-3.1z"/><path fill="#EB4335" d="M12 4.7c1.8 0 3 .8 3.7 1.4l2.7-2.7C17.9 1.8 15.2 0 12 0 7.3 0 3.3 2.7 1.3 6.4l4.1 3.1c.9-2.8 3.5-4.8 6.6-4.8z"/></svg>
+              <span data-i18n="gh.connect">Conectar con Google</span>
+            </button>
+            <button id="googleDisconnectBtn" class="btn btn-ghost btn-sm hidden" data-i18n="gh.disconnect">Desconectar Google</button>
+          </div>
+        </div>
+        <p id="googleClientIdWarning" class="small hidden" style="color:var(--warn);margin:-10px 0 16px 4px">⚠ Aún no has configurado tu CLIENT_ID. Abre <code>NexusAI.html</code>, busca <code>GOOGLE_CLIENT_ID</code> (sección 1 del JavaScript) y pégalo ahí. Guía de 5 pasos al final de este archivo.</p>
+
+        <!-- Catálogo de conectores (se renderiza desde JS) -->
+        <div class="cc-grid" id="connectorGrid" aria-label="Catálogo de conectores"></div>
+
+        <!-- Conectores personalizados (MCP / API propia) -->
+        <div class="custom-section">
+          <h3><span data-i18n="custom.title">Conector personalizado</span> <span class="muted small" data-i18n="custom.badge">· MCP / API propia</span></h3>
+          <p class="muted small" style="margin-top:6px;line-height:1.6" data-i18n="custom.sub">¿Usas un servidor MCP, un proxy o tu propia API? Regístralo aquí: estará disponible como contexto para la IA y podrás probar la conexión al instante.</p>
+          <form id="customConnectorForm" class="custom-form" autocomplete="off">
+            <div>
+              <label class="field-label" for="ccName"><span data-i18n="custom.name">Nombre</span></label>
+              <input class="field" id="ccName" placeholder="Ej. Mi CRM interno" required maxlength="60">
+            </div>
+            <div>
+              <label class="field-label" for="ccUrl"><span data-i18n="custom.url">URL del servidor MCP / API</span></label>
+              <input class="field" id="ccUrl" type="url" placeholder="https://mi-servidor.com/mcp" required>
+            </div>
+            <div>
+              <label class="field-label" for="ccAuth"><span data-i18n="custom.auth">Tipo de autenticación</span></label>
+              <select class="field" id="ccAuth">
+                <option value="none" data-i18n="auth.none">Ninguna</option>
+                <option value="apikey" data-i18n="auth.apikey">API key (cabecera)</option>
+                <option value="bearer" data-i18n="auth.bearer">Bearer token</option>
+                <option value="oauth" data-i18n="auth.oauth">OAuth 2.0 (token ya obtenido)</option>
+              </select>
+            </div>
+            <div id="ccHeaderRow" class="hidden">
+              <label class="field-label" for="ccHeader"><span data-i18n="custom.header">Nombre de la cabecera</span></label>
+              <input class="field" id="ccHeader" placeholder="X-API-Key" value="X-API-Key">
+            </div>
+            <div class="full" id="ccSecretRow">
+              <label class="field-label" for="ccSecret"><span data-i18n="custom.secret">Clave / Token (se guarda solo en tu navegador)</span></label>
+              <input class="field" id="ccSecret" type="password" placeholder="••••••••••••••••" autocomplete="off">
+            </div>
+            <div class="custom-form-actions">
+              <button type="button" class="btn btn-ghost btn-sm" id="ccTestBtn">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H5a2 2 0 0 0-2 2v4m18 0V5a2 2 0 0 0-2-2h-4M3 15v4a2 2 0 0 0 2 2h4m10 0h4a2 2 0 0 0 2-2v-4"/><circle cx="12" cy="12" r="3"/></svg>
+                <span data-i18n="custom.test">Probar conexión</span>
+              </button>
+              <button type="submit" class="btn btn-primary btn-sm">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                <span data-i18n="custom.save">Guardar conector</span>
+              </button>
+              <span id="ccTestResult" class="small muted" role="status"></span>
+            </div>
+          </form>
+          <div class="custom-list" id="customConnectorList"></div>
+        </div>
+
+      </div>
+    </section>
+    <!-- ════════ VISTA: AJUSTES ════════ -->
+    <section id="viewSettings" class="view" aria-label="Ajustes">
+      <div class="page-scroll">
+        <div class="page-head">
+          <div>
+            <h2 data-i18n="set.title">Ajustes</h2>
+            <p class="page-sub" data-i18n="set.sub">Personaliza la apariencia, la IA, los datos y la privacidad. Todo se guarda al instante en tu navegador (localStorage).</p>
+          </div>
+        </div>
+
+        <div class="settings-wrap">
+
+          <!-- ── Apariencia ───────────────────────── -->
+          <div class="settings-card">
+            <h3><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent-2)"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><span data-i18n="card.appearance">Apariencia</span></h3>
+            <p class="card-sub" data-i18n="card.appearanceSub">Tema, color de acento, letra, densidad e idioma.</p>
+
+            <div class="setting-row">
+              <div class="setting-info"><b data-i18n="set.theme">Tema</b><small data-i18n="set.themeSub">Automático sigue la preferencia de tu sistema.</small></div>
+              <div class="seg" role="group" aria-label="Tema">
+                <button data-theme-set="light"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><span data-i18n="theme.light">Claro</span></button>
+                <button data-theme-set="dark" class="active"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><span data-i18n="theme.dark">Oscuro</span></button>
+                <button data-theme-set="auto"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg><span data-i18n="theme.auto">Automático</span></button>
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-info"><b data-i18n="set.accent">Color de acento</b><small data-i18n="set.accentSub">6 paletas — se aplican al instante en toda la interfaz.</small></div>
+              <div class="accent-swatches" role="group" aria-label="Color de acento">
+                <button class="swatch active" data-accent-set="violet" style="background:#7c3aed" aria-label="Violeta"></button>
+                <button class="swatch" data-accent-set="blue" style="background:#2563eb" aria-label="Azul"></button>
+                <button class="swatch" data-accent-set="emerald" style="background:#059669" aria-label="Esmeralda"></button>
+                <button class="swatch" data-accent-set="amber" style="background:#d97706" aria-label="Ámbar"></button>
+                <button class="swatch" data-accent-set="rose" style="background:#e11d48" aria-label="Rosa"></button>
+                <button class="swatch" data-accent-set="cyan" style="background:#0891b2" aria-label="Cian"></button>
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-info"><b data-i18n="set.font">Tamaño de letra</b><small data-i18n="set.fontSub">Afecta principalmente al texto del chat.</small></div>
+              <div class="seg" role="group" aria-label="Tamaño de letra">
+                <button data-font-set="sm">A−</button>
+                <button data-font-set="md" class="active">A</button>
+                <button data-font-set="lg">A+</button>
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-info"><b data-i18n="set.density">Densidad de la interfaz</b><small data-i18n="set.densitySub">Compacta muestra más contenido en menos espacio.</small></div>
+              <div class="seg" role="group" aria-label="Densidad">
+                <button data-density-set="cozy" class="active" data-i18n="density.cozy">Cómoda</button>
+                <button data-density-set="compact" data-i18n="density.compact">Compacta</button>
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-info"><b data-i18n="set.lang">Idioma</b><small data-i18n="set.langSub">Traducción de la interfaz (los mensajes con la IA no se traducen).</small></div>
+              <div class="seg" role="group" aria-label="Idioma">
+                <button data-lang-set="es" class="active">Español</button>
+                <button data-lang-set="en">English</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Inteligencia artificial ───────────── -->
+          <div class="settings-card">
+            <h3><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent-2)"><path d="M12 3v3M5.6 5.6l2.1 2.1M3 12h3M18.4 5.6l-2.1 2.1M12 18v3"/><rect x="7" y="9" width="10" height="9" rx="2"/></svg><span data-i18n="card.ai">Inteligencia artificial</span></h3>
+            <p class="card-sub" data-i18n="card.aiSub">Tus claves se guardan únicamente en localStorage y viajan directo de tu navegador al proveedor. Nunca pasan por terceros.</p>
+
+            <div class="setting-row">
+              <div class="setting-info"><b data-i18n="set.provider">Proveedor</b><small data-i18n="set.providerSub">Anthropic (Claude) u OpenAI-compatible (OpenAI, Groq, OpenRouter, DeepSeek…).</small></div>
+              <div class="seg" role="group" aria-label="Proveedor">
+                <button data-provider-set="anthropic" class="active">Anthropic</button>
+                <button data-provider-set="openai">OpenAI-compatible</button>
+              </div>
+            </div>
+
+            <div class="setting-row" id="rowAnthropicKey">
+              <div class="setting-info" style="flex:1"><b>Anthropic API Key</b><small>Obtenla en console.anthropic.com → API Keys</small>
+                <div class="key-input-wrap" style="margin-top:8px;max-width:440px">
+                  <input class="field" id="anthropicKey" type="password" placeholder="sk-ant-…" autocomplete="off" spellcheck="false">
+                  <button class="icon-btn eye-toggle" data-target="anthropicKey" aria-label="Mostrar u ocultar clave"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                </div>
+              </div>
+            </div>
+
+            <div class="setting-row hidden" id="rowOpenaiKey">
+              <div class="setting-info" style="flex:1"><b>OpenAI API Key</b><small>Obtenla en platform.openai.com → API keys</small>
+                <div class="key-input-wrap" style="margin-top:8px;max-width:440px">
+                  <input class="field" id="openaiKey" type="password" placeholder="sk-…" autocomplete="off" spellcheck="false">
+                  <button class="icon-btn eye-toggle" data-target="openaiKey" aria-label="Mostrar u ocultar clave"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                </div>
+                <div style="margin-top:10px;max-width:440px">
+                  <label class="field-label" for="openaiBase">Base URL (opcional)</label>
+                  <input class="field" id="openaiBase" placeholder="https://api.openai.com/v1" spellcheck="false">
+                  <small class="muted" style="display:block;margin-top:5px">Compatibles: https://api.groq.com/openai/v1 · https://openrouter.ai/api/v1 · https://api.deepseek.com/v1</small>
+                </div>
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-info" style="flex:1"><b data-i18n="set.defaultModel">Modelo por defecto</b><small data-i18n="set.defaultModelSub">También puedes cambiarlo rápido en la barra superior.</small>
+                <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;max-width:440px">
+                  <select class="field" id="settingsModel" aria-label="Modelo por defecto"></select>
+                  <input class="field hidden" id="settingsCustomModel" placeholder="modelo-personalizado" style="max-width:200px" spellcheck="false">
+                </div>
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-info"><b data-i18n="set.temp">Temperatura</b><small data-i18n="set.tempSub">0 = preciso y determinista · 1 = creativo.</small></div>
+              <div class="temp-row"><input type="range" id="temperature" min="0" max="1" step="0.05" value="0.7" aria-label="Temperatura"><span class="temp-val" id="tempVal">0.7</span></div>
+            </div>
+
+            <div style="padding-top:12px;border-top:1px solid var(--border)">
+              <label class="field-label" for="customInstructions"><span data-i18n="set.instructions">Instrucciones personalizadas para la IA</span><span class="muted" id="instrCount">0 / 1500</span></label>
+              <textarea class="textarea-field" id="customInstructions" maxlength="1500" data-i18n-ph="set.instructionsPh" placeholder="Ej. Responde siempre en español, con ejemplos de código comentados, y trata de ser breve…"></textarea>
+            </div>
+          </div>
+
+          <!-- ── Gestión de datos ─────────────────── -->
+          <div class="settings-card">
+            <h3><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent-2)"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg><span data-i18n="card.data">Gestión de datos</span></h3>
+            <p class="card-sub" data-i18n="card.dataSub">Exporta todo (conversaciones, ajustes, conectores) a un archivo JSON, o restáuralo en otro navegador.</p>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <button class="btn btn-ghost" id="exportBtn"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><span data-i18n="data.export">Exportar JSON</span></button>
+              <button class="btn btn-ghost" id="importBtn"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg><span data-i18n="data.import">Importar JSON</span></button>
+              <input type="file" id="importFile" accept="application/json,.json" class="hidden" aria-hidden="true">
+              <button class="btn btn-danger" id="wipeBtn"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span data-i18n="data.wipe">Borrar todo</span></button>
+            </div>
+          </div>
+
+          <!-- ── Privacidad ───────────────────────── -->
+          <div class="settings-card danger-zone" style="border-color:var(--border)">
+            <h3><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent-2)"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><span data-i18n="card.privacy">Privacidad y seguridad</span></h3>
+            <div class="privacy-note">
+              <b data-i18n="priv.title">Nexus AI no tiene servidores. Nada de lo que escribes pasa por nosotros.</b>
+              <ul>
+                <li data-i18n="priv.1">Tus API keys, tokens y conversaciones se guardan <b>únicamente en localStorage</b> de este navegador.</li>
+                <li data-i18n="priv.2">Las peticiones de IA van <b>directo de tu navegador al proveedor</b> que elijas (Anthropic/OpenAI o compatible).</li>
+                <li data-i18n="priv.3">Los conectores de Google usan <b>OAuth 2.0 en cliente</b> (Google Identity Services). El token vive en tu navegador y expira en ~1 hora; puedes revocarlo cuando quieras.</li>
+                <li data-i18n="priv.4">Si exportas el JSON de respaldo, <b>incluirá tus claves</b>: guárdalo como si fuera una contraseña.</li>
+                <li data-i18n="priv.5">El HTML renderizado se genera con escapado estricto y sin HTML crudo del modelo: no hay XSS por contenido de la IA.</li>
+                <li data-i18n="priv.6">Borra todo cuando dejes de usar el equipo compartido: un clic en “Borrar todo”.</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- ── Cuenta de Google ─────────────────── -->
+          <div class="settings-card">
+            <h3><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path fill="#4285F4" d="M23.5 12.3c0-.9-.1-1.5-.3-2.2H12v4h6.5c-.1 1.1-.8 2.7-2.4 3.8l3.9 3c2.4-2.2 3.5-5.4 3.5-8.6z"/><path fill="#34A853" d="M12 24c3.2 0 5.9-1.1 7.9-2.9l-3.9-3c-1 .7-2.4 1.2-4 1.2-3.1 0-5.7-2-6.6-4.8l-4 3.1C3.3 21.3 7.3 24 12 24z"/><path fill="#FBBC05" d="M5.4 14.5c-.2-.7-.4-1.5-.4-2.5s.1-1.7.4-2.5l-4-3.1C.5 8.4 0 10.1 0 12s.5 3.6 1.3 5.6l4.1-3.1z"/><path fill="#EB4335" d="M12 4.7c1.8 0 3 .8 3.7 1.4l2.7-2.7C17.9 1.8 15.2 0 12 0 7.3 0 3.3 2.7 1.3 6.4l4.1 3.1c.9-2.8 3.5-4.8 6.6-4.8z"/></svg><span data-i18n="card.google">Cuenta de Google</span></h3>
+            <div class="setting-row" style="border-top:none">
+              <div class="setting-info"><b id="settingsGoogleEmail">No conectado</b><small data-i18n="card.googleSub">Sincroniza Drive, Gmail, Calendar, Docs y Sheets.</small></div>
+              <button class="btn btn-ghost" id="settingsGoogleConnect" data-i18n="gh.connect">Conectar con Google</button>
+              <button class="btn btn-danger hidden" id="settingsGoogleDisconnect" data-i18n="gh.disconnect">Desconectar Google</button>
+            </div>
+          </div>
+
+          <!-- ── Atajos de teclado ────────────────── -->
+          <div class="settings-card">
+            <h3><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent-2)"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M6 14h.01M18 14h.01M9 14h6"/></svg><span data-i18n="card.shortcuts">Atajos de teclado</span></h3>
+            <table class="shortcuts-table">
+              <tbody>
+                <tr><td><kbd>Enter</kbd></td><td data-i18n="sc.send">Enviar mensaje</td></tr>
+                <tr><td><kbd>Shift</kbd>+<kbd>Enter</kbd></td><td data-i18n="sc.newline">Salto de línea en el mensaje</td></tr>
+                <tr><td><kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>K</kbd></td><td data-i18n="sc.search">Enfocar el buscador de conversaciones</td></tr>
+                <tr><td><kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>/</kbd></td><td data-i18n="sc.collapse">Colapsar / expandir barra lateral</td></tr>
+                <tr><td><kbd>Esc</kbd></td><td data-i18n="sc.esc">Cerrar ventanas emergentes</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="settings-footer">Nexus AI v1.0 — <span data-i18n="footer.made">un solo archivo HTML, sin backend. Hecho para publicarse gratis.</span></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div><!-- /#app -->
+
+<!-- ════════ MODAL genérico ════════ -->
+<div id="modalOverlay" class="hidden" role="presentation">
+  <div class="modal" id="modalBox" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-head">
+      <h3 id="modalTitle">Título</h3>
+      <button class="icon-btn" id="modalCloseBtn" aria-label="Cerrar"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="modalCancelBtn">Cancelar</button>
+      <button class="btn btn-primary" id="modalConfirmBtn">Aceptar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ TOASTS ════════ -->
+<div id="toastRoot" aria-live="polite" aria-atomic="false"></div>
+
+<script>
+/* =====================================================================
+   NEXUS AI — Lógica de la aplicación
+   Secciones:
+     1. Configuración y catálogo (Google CLIENT_ID, modelos, conectores)
+     2. Estado global y persistencia (localStorage)
+     3. Utilidades (DOM, toasts, modal, fetch con timeout)
+     4. Internacionalización (es / en)
+     5. Apariencia (tema, acento, densidad, letra, idioma)
+     6. Conversaciones (historial, buscar, renombrar, eliminar)
+     7. Markdown seguro (renderizado con sanitización)
+     8. Chat (envío, streaming SSE, detener, regenerar, copiar)
+     9. Detección inteligente de conectores (keywords + IA)
+    10. Conectores UI (catálogo, Google GIS, token/webhook/demo, tests)
+    11. Ajustes (claves, exportar/importar/borrar)
+    12. Navegación, atajos de teclado y arranque
+   ===================================================================== */
+'use strict';
+
+/* =====================================================================
+   1) CONFIGURACIÓN Y CATÁLOGO
+   ===================================================================== */
+
+// ──────────────────────────────────────────────────────────────────
+// 🔑🔑🔑  GOOGLE CLIENT_ID  🔑🔑🔑
+// Pega aquí tu OAuth 2.0 Client ID de tipo "Aplicación web".
+// Pasos: console.cloud.google.com → APIs y servicios → Credenciales
+//   → Crear credenciales → ID de cliente de OAuth → Aplicación web
+//   → Agrega tu origen (ej. https://TU-USUARIO.github.io o http://localhost:5500)
+//   → Habilita: Google Calendar API, Gmail API, Drive API, Docs API, Sheets API
+// Encontrarás la guía completa de 5 pasos al FINAL de este archivo.
+// ⚠️ Sin esto, "Conectar con Google" mostrará un aviso, pero el resto funciona.
+// ──────────────────────────────────────────────────────────────────
+const GOOGLE_CLIENT_ID = '549217444707-jidbcj2mq9am9jcno9pc2gm87ut6j1va.apps.googleusercontent.com';
+const GOOGLE_SCOPES = [
+  'openid', 'email',
+  'https://www.googleapis.com/auth/calendar.readonly',
+  'https://www.googleapis.com/auth/gmail.readonly',
+  'https://www.googleapis.com/auth/drive.metadata.readonly',
+  'https://www.googleapis.com/auth/documents',
+  'https://www.googleapis.com/auth/spreadsheets'
+].join(' ');
+const GOOGLE_ID_CONFIGURED = !GOOGLE_CLIENT_ID.startsWith('PEGA_AQUI');
+
+// Modelos disponibles por proveedor (además el usuario puede escribir uno libre en Ajustes)
+const MODELS = {
+  anthropic: [
+    { id: 'claude-sonnet-4-5', label: 'Claude Sonnet 4.5' },
+    { id: 'claude-opus-4-1',   label: 'Claude Opus 4.1' },
+    { id: 'claude-haiku-4-5',  label: 'Claude Haiku 4.5' }
+  ],
+  openai: [
+    { id: 'gpt-4o',      label: 'GPT-4o' },
+    { id: 'gpt-4o-mini', label: 'GPT-4o mini' },
+    { id: 'gpt-4.1',     label: 'GPT-4.1' },
+    { id: 'gpt-4.1-mini',label: 'GPT-4.1 mini' },
+    { id: 'o4-mini',     label: 'o4-mini (razonamiento)' }
+  ]
+};
+
+// ── Catálogo de conectores ──────────────────────────────────────
+// type: 'google' | 'token' | 'webhook' | 'demo'
+//   google  → OAuth 2.0 vía Google Identity Services (token en cliente)
+//   token   → PEGA token personal (PAT / API key). Se valida con llamada real.
+//   webhook → URL de webhook (n8n, Make, Worker, Slack Incoming Webhook…)
+//   demo    → La API exige backend seguro → modo demo etiquetado ([DEMO])
+const CONNECTORS = [
+  { id:'google-drive', name:'Google Drive', catKey:'cat.storage', type:'google', quick:'drive',
+    desc:{es:'Busca, lista y organiza tus archivos y carpetas.', en:'Search, list and organize your files and folders.'},
+    icon:'<svg viewBox="0 0 24 24"><defs><linearGradient id="gGdrv" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#34A853"/><stop offset=".5" stop-color="#FBBC05"/><stop offset="1" stop-color="#4285F4"/></linearGradient></defs><path d="M15.7 3H8.3L2.4 13.4l2.9 4.9h13.4l2.9-4.9L15.7 3z" fill="none" stroke="url(#gGdrv)" stroke-width="1.9" stroke-linejoin="round"/><path d="M9.1 13.4h12.6M9.1 13.4L13.6 3.6" stroke="url(#gGdrv)" stroke-width="1.9" stroke-linecap="round"/></svg>' },
+  { id:'gmail', name:'Gmail', catKey:'cat.mail', type:'google', quick:'gmail',
+    desc:{es:'Lee tu bandeja de entrada y busca correos recientes.', en:'Read your inbox and search recent email.'},
+    icon:'<svg viewBox="0 0 24 24"><rect x="2.4" y="5" width="19.2" height="14" rx="2.2" fill="none" stroke="#EA4335" stroke-width="1.8"/><path d="M3.6 7l8.4 6.6L20.4 7" fill="none" stroke="#EA4335" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
+  { id:'google-calendar', name:'Google Calendar', catKey:'cat.calendar', type:'google', quick:'calendar',
+    desc:{es:'Consulta tu agenda y tus próximos eventos.', en:'Check your schedule and upcoming events.'},
+    icon:'<svg viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="16.5" rx="2.4" fill="none" stroke="#1A73E8" stroke-width="1.8"/><path d="M3 9.3h18" stroke="#1A73E8" stroke-width="1.8"/><path d="M8.2 2.6v4M15.8 2.6v4" stroke="#1A73E8" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="14.6" r="1.7" fill="#1A73E8"/></svg>' },
+  { id:'google-docs', name:'Google Docs', catKey:'cat.docs', type:'google', quick:'docs',
+    desc:{es:'Crea documentos nuevos en tu Drive con un clic.', en:'Create brand-new documents in your Drive.'},
+    icon:'<svg viewBox="0 0 24 24"><path d="M6.3 2.5h7.4l4.7 4.7v13.3a1.9 1.9 0 0 1-1.9 1.9H6.3a1.9 1.9 0 0 1-1.9-1.9V4.4a1.9 1.9 0 0 1 1.9-1.9z" fill="none" stroke="#4285F4" stroke-width="1.7" stroke-linejoin="round"/><path d="M13.5 2.5V7.2h4.9" stroke="#4285F4" stroke-width="1.7" stroke-linejoin="round"/><path d="M8.3 11.6h7.4M8.3 15h7.4M8.3 18.4h4.6" stroke="#4285F4" stroke-width="1.5" stroke-linecap="round"/></svg>' },
+  { id:'google-sheets', name:'Google Sheets', catKey:'cat.docs', type:'google', quick:'sheets',
+    desc:{es:'Crea hojas de cálculo nuevas en tu Drive.', en:'Create new spreadsheets in your Drive.'},
+    icon:'<svg viewBox="0 0 24 24"><path d="M6.3 2.5h7.4l4.7 4.7v13.3a1.9 1.9 0 0 1-1.9 1.9H6.3a1.9 1.9 0 0 1-1.9-1.9V4.4a1.9 1.9 0 0 1 1.9-1.9z" fill="none" stroke="#0F9D58" stroke-width="1.7" stroke-linejoin="round"/><path d="M13.5 2.5V7.2h4.9" stroke="#0F9D58" stroke-width="1.7" stroke-linejoin="round"/><path d="M8.3 11.4h7.4M8.3 15h7.4M8.3 18.6h7.4M11.6 11.4v7.2" stroke="#0F9D58" stroke-width="1.4" stroke-linecap="round"/></svg>' },
+  { id:'canva', name:'Canva', catKey:'cat.design', type:'demo', docsUrl:'https://www.canva.com/developers/',
+    desc:{es:'Genera pósters, flyers, logos e infografías con IA.', en:'Generate posters, flyers, logos and infographics.'},
+    icon:'<svg viewBox="0 0 24 24"><defs><linearGradient id="canvaG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#00C4CC"/><stop offset="1" stop-color="#7D2AE8"/></linearGradient></defs><rect width="24" height="24" rx="6" fill="url(#canvaG)"/><path d="M16.4 8.9a5.5 5.5 0 1 0 0 6.2" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round"/></svg>' },
+  { id:'notion', name:'Notion', catKey:'cat.notes', type:'demo', docsUrl:'https://developers.notion.com/',
+    desc:{es:'Crea y organiza páginas, bases de datos y wikis.', en:'Create and organize pages, databases and wikis.'},
+    tip:{es:'Tip: también puedes exponer Notion vía un servidor MCP y registrarlo como "Conector personalizado".', en:'Tip: you can also expose Notion through an MCP server and register it as a Custom Connector.'},
+    icon:'<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3.4" fill="#191919"/><path d="M8.2 16.6V7.4l7.6 9.2V7.4" stroke="#fff" stroke-width="1.9" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>' },
+  { id:'slack', name:'Slack', catKey:'cat.chat', type:'webhook', docsUrl:'https://api.slack.com/messaging/webhooks',
+    desc:{es:'Envía mensajes a un canal vía Incoming Webhook.', en:'Post messages to a channel via Incoming Webhook.'},
+    fields:[{key:'url', labelKey:'field.webhookUrl', ph:'https://hooks.slack.com/services/T…/B…/…', secret:false}],
+    icon:'<svg viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#19171D"/><rect x="7.6" y="4.6" width="2.6" height="14.8" rx="1.3" fill="#36C5F0"/><rect x="13.8" y="4.6" width="2.6" height="14.8" rx="1.3" fill="#E01E5A"/><rect x="4.6" y="7.6" width="14.8" height="2.6" rx="1.3" fill="#2EB67D"/><rect x="4.6" y="13.8" width="14.8" height="2.6" rx="1.3" fill="#ECB22E"/></svg>' },
+  { id:'github', name:'GitHub', catKey:'cat.dev', type:'token', quick:'github', docsUrl:'https://github.com/settings/tokens',
+    desc:{es:'Lee tus repositorios, issues y pull requests.', en:'Read your repositories, issues and pull requests.'},
+    fields:[{key:'token', labelKey:'field.pat', ph:'ghp_… o github_pat_…', secret:true}],
+    icon:'<svg viewBox="0 0 24 24"><rect width="24" height="24" rx="5" fill="#24292F"/><path fill="#f0f3f6" d="M12 3.6c-4.6 0-8.3 3.8-8.3 8.4 0 3.7 2.4 6.9 5.7 8 .4.1.6-.2.6-.4v-1.5c-2.3.5-2.8-1.1-2.8-1.1-.4-1-.9-1.3-.9-1.3-.8-.5.1-.5.1-.5.8.1 1.3.9 1.3.9.8 1.4 2 .9 2.6.7.1-.6.3-1 .6-1.2-1.9-.2-3.8-.9-3.8-4.2 0-.9.3-1.7.9-2.3-.1-.2-.4-1.1.1-2.3 0 0 .7-.2 2.3.9a8 8 0 0 1 4.2 0c1.6-1.1 2.3-.9 2.3-.9.5 1.2.2 2.1.1 2.3.6.6.9 1.4.9 2.3 0 3.3-2 4-3.9 4.2.3.3.6.8.6 1.7v2.4c0 .2.2.5.6.4a8.3 8.3 0 0 0 5.7-8C20.3 7.4 16.6 3.6 12 3.6z"/></svg>' },
+  { id:'dropbox', name:'Dropbox', catKey:'cat.storage', type:'token', quick:'dropbox', docsUrl:'https://www.dropbox.com/developers/apps',
+    desc:{es:'Explora archivos de tu Dropbox con un access token.', en:'Browse your Dropbox files with an access token.'},
+    fields:[{key:'token', labelKey:'field.token', ph:'sl.…', secret:true}],
+    icon:'<svg viewBox="0 0 24 24"><path fill="#0061FF" d="M6.2 3.2 12.2 7.4 6.2 11.6 0 7.4 6.2 3.2z"/><path fill="#0061FF" d="M17.8 3.2l6 4.2-6 4.2-6-4.2 6-4.2z"/><path fill="#0061FF" d="M0 13l6.2-4.2 6 4.2-6.2 4.2L0 13z"/><path fill="#0061FF" d="M11.8 8.8l6 4.2-6 4.2-6-4.2 6-4.2z"/><path fill="#0061FF" d="M6.2 18.6l5.8-3.9 5.8 3.9-5.8 4-5.8-4z"/></svg>' },
+  { id:'trello', name:'Trello', catKey:'cat.tasks', type:'token', quick:'trello', docsUrl:'https://trello.com/power-ups/admin',
+    desc:{es:'Lee tus tableros y tarjetas con tu API key y token.', en:'Read your boards and cards with API key and token.'},
+    fields:[{key:'key', labelKey:'field.trelloKey', ph:'API key de 32 caracteres', secret:false},{key:'token', labelKey:'field.trelloToken', ph:'Token de acceso', secret:true}],
+    icon:'<svg viewBox="0 0 24 24"><rect width="24" height="24" rx="4.6" fill="#0079BF"/><rect x="4.6" y="4.6" width="6.3" height="14.8" rx="1.5" fill="#fff"/><rect x="13.1" y="4.6" width="6.3" height="9.3" rx="1.5" fill="#fff"/></svg>' },
+  { id:'asana', name:'Asana', catKey:'cat.tasks', type:'token', quick:'asana', docsUrl:'https://app.asana.com/0/my-apps',
+    desc:{es:'Consulta tus tareas y proyectos con un Personal Access Token.', en:'Check your tasks and projects with a PAT.'},
+    fields:[{key:'token', labelKey:'field.pat', ph:'1/12345678:abcdef…', secret:true}],
+    icon:'<svg viewBox="0 0 24 24"><circle cx="12" cy="5.6" r="4.1" fill="#F06A6A"/><circle cx="6" cy="17.4" r="4.1" fill="#F06A6A"/><circle cx="18" cy="17.4" r="4.1" fill="#F06A6A"/></svg>' },
+  { id:'whatsapp', name:'WhatsApp', catKey:'cat.chat', type:'webhook', docsUrl:'https://github.com/twilio/twilio-node#rest-api',
+    desc:{es:'Mensajes vía webhook: n8n, Make, Twilio o tu Cloudflare Worker.', en:'Send messages via webhook: n8n, Make, Twilio or a Worker.'},
+    fields:[{key:'url', labelKey:'field.webhookUrl', ph:'https://tu-n8n.cloud/webhook/whatsapp', secret:false}],
+    icon:'<svg viewBox="0 0 24 24"><path fill="#25D366" d="M12 2a9.9 9.9 0 0 0-8.6 14.8L2 22l5.4-1.4A10 10 0 1 0 12 2z"/><path fill="#fff" d="M8.9 7.9c-.3 0-.7.1-1 .5-.3.4-1.3 1.2-1.3 3s1.3 3.4 1.5 3.7c.2.3 2.5 3.8 6.1 5.2 3 .8 3.6.7 4.3.6.7-.1 1.9-.8 2.2-1.7.3-.8.3-1.5.2-1.7-.1-.1-.4-.3-1.2-.6-.8-.3-1.9-.9-2.1-1.1-.3-.1-.6-.2-.9.2-.3.4-.7 1.1-.9 1.3-.2.2-.4.2-.8 0-.4-.2-1.4-.5-2.7-1.6-1-.9-1.7-2-1.9-2.4-.2-.4 0-.6.2-.8l.5-.7c.2-.3.2-.6 0-.9-.3-.7-1.4-3.3-2-4.1z"/></svg>' },
+  { id:'telegram', name:'Telegram', catKey:'cat.chat', type:'webhook', docsUrl:'https://core.telegram.org/bots/api',
+    desc:{es:'Envía mensajes vía webhook a tu bot (n8n, Make, Worker…).', en:'Send messages via webhook to your bot (n8n, Make, Worker…).'},
+    fields:[{key:'url', labelKey:'field.webhookUrl', ph:'https://api.telegram.org/bot…/sendMessage o tu webhook', secret:false}],
+    icon:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#2AABEE"/><path fill="#fff" d="M17.7 6.6l-2.3 10.8c-.2.9-.8 1.1-1.6.7l-4.4-3.3-2.1 2c-.3.3-.5.5-.9.5l.3-4.4 8.1-7.3c.3-.3-.1-.5-.5-.3l-10 6.3-4.3-1.4c-.9-.3-.9-1 .2-1.4l16.8-6.5c.8-.3 1.5.2 1.3 1.5z"/></svg>' }
+];
+
+// ── Detectores de intención: palabras clave por conector ───────
+// Cada detector puntúa el mensaje; además, si hay API key, una llamada
+// ligera a la IA clasifica la intención (ver sección 9) y se fusionan.
+const DETECTORS = [
+  { id:'canva', kw:['póster','poster','flyer','diseñ','logo','banner','cartel','infografía','infografia','portada','invitación','invitacion','diseño gráfico','flyer','muppy','post para','story'],
+    reason:{es:'Diseño gráfico y contenido visual con IA', en:'AI graphic design & visual content'} },
+  { id:'google-calendar', kw:['agenda','reunión','reunion','junta','cita','evento','calendario','mañana a las','meeting','schedule','appointment','disponibilidad'],
+    reason:{es:'Crear o consultar eventos en tu agenda', en:'Create or check events on your calendar'} },
+  { id:'gmail', kw:['correo','email','mail','bandeja','redactar a','enviar un correo','inbox','responder a','mensaje a cliente'],
+    reason:{es:'Redactar, enviar o revisar correos', en:'Draft, send or review email'} },
+  { id:'google-drive', kw:['drive','archivo','documento compartido','guardar en','subir','compartir enlace','carpeta','file'],
+    reason:{es:'Buscar y gestionar archivos en Drive', en:'Find and manage files in Drive'} },
+  { id:'google-docs', kw:['documento de texto','google docs','informe en','acta de','crea un doc','redacta un documento','borrador de documento'],
+    reason:{es:'Crear un documento en Google Docs', en:'Create a Google Docs document'} },
+  { id:'google-sheets', kw:['hoja de cálculo','hoja de calculo','spreadsheet','sheets','excel','celdas','tabla con datos','presupuesto en hoja'],
+    reason:{es:'Crear u organizar hojas de cálculo', en:'Create or organize spreadsheets'} },
+  { id:'notion', kw:['notion','nota','wiki','base de datos','página en','pagina en','documenta en notion'],
+    reason:{es:'Crear páginas y bases de datos en Notion', en:'Create pages and databases in Notion'} },
+  { id:'slack', kw:['slack','canal','avísale al equipo','avisa al equipo','mensaje al equipo','notificar en sl'],
+    reason:{es:'Publicar avisos en un canal de Slack', en:'Post updates to a Slack channel'} },
+  { id:'github', kw:['github','repositorio','repo ','commit','issue','pull request','pr ','rama','bug','código del proyecto','codigo del proyecto'],
+    reason:{es:'Trabajar con repos, issues y PRs', en:'Work with repos, issues and PRs'} },
+  { id:'dropbox', kw:['dropbox'],
+    reason:{es:'Acceder a archivos de Dropbox', en:'Access Dropbox files'} },
+  { id:'trello', kw:['trello','tablero','tarjeta del tablero','kanban'],
+    reason:{es:'Organizar tableros y tarjetas', en:'Organize boards and cards'} },
+  { id:'asana', kw:['asana','tarea','tareas pendientes','proyecto en asana','to-do del equipo'],
+    reason:{es:'Gestionar tareas y proyectos', en:'Manage tasks and projects'} },
+  { id:'whatsapp', kw:['whatsapp','whats app','whats'],
+    reason:{es:'Enviar mensajes de WhatsApp vía webhook', en:'Send WhatsApp messages via webhook'} },
+  { id:'telegram', kw:['telegram'],
+    reason:{es:'Enviar mensajes a tu bot de Telegram', en:'Send messages to your Telegram bot'} }
+];
+
+/* =====================================================================
+   2) ESTADO GLOBAL Y PERSISTENCIA (localStorage)
+   ===================================================================== */
+const LS_KEY = 'nexus_ai_hub_v1';
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const defaultState = () => ({
+  conversations: [],
+  activeId: null,
+  activeContexts: [],
+  settings: {
+    theme: 'dark', accent: 'violet', language: 'es', fontSize: 'md', density: 'cozy',
+    provider: 'anthropic', anthropicKey: '', openaiKey: '', openaiBase: '',
+    model: 'claude-sonnet-4-5', customModel: '', temperature: 0.7, instructions: ''
+  },
+  google: { token: null, expiresAt: 0, email: null },
+  connectors: {},        // id → { status, token?, key?, url?, savedAt }
+  customConnectors: []   // [{ id, name, url, auth, headerName, secret, status, savedAt }]
+});
+function loadState() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return defaultState();
+    const parsed = JSON.parse(raw);
+    const def = defaultState();
+    // Fusión tolerante a versiones antiguas del esquema
+    return {
+      ...def, ...parsed,
+      settings: { ...def.settings, ...(parsed.settings || {}) },
+      google: { ...def.google, ...(parsed.google || {}) },
+      connectors: parsed.connectors || {},
+      customConnectors: Array.isArray(parsed.customConnectors) ? parsed.customConnectors : []
+    };
+  } catch (e) {
+    console.warn('[NexusAI] localStorage corrupto, iniciando limpio:', e);
+    return defaultState();
+  }
+}
+let state = loadState();
+let saveTimer = null;
+function save() { // Debounce de 120 ms para no escribir en cada token del stream
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    try { localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+    catch (e) { console.error('[NexusAI] No se pudo guardar:', e); }
+  }, 120);
+}
+function activeConversation() { return state.conversations.find(c => c.id === state.activeId) || null; }
+
+/* =====================================================================
+   3) UTILIDADES GENERALES
+   ===================================================================== */
+const $  = (sel, ctx = document) => ctx.querySelector(sel);
+const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
+const escapeHtml = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+const debounce = (fn, ms) => { let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); }; };
+const isGoogleId = id => ['google-drive','gmail','google-calendar','google-docs','google-sheets'].includes(id);
+const connectorById = id => CONNECTORS.find(c => c.id === id) || null;
+
+// fetch con timeout (AbortController) — devuelve Response o lanza Error legible
+async function fetchTimeout(url, options = {}, ms = 10000) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  try { return await fetch(url, { ...options, signal: ctrl.signal }); }
+  catch (e) {
+    if (e.name === 'AbortError') throw new Error('Tiempo de espera agotado (10 s)');
+    throw e; // TypeError de red/CORS
+  } finally { clearTimeout(t); }
+}
+async function apiFetchJSON(url, { method = 'GET', token = null, body = null, headers = {} } = {}, ms = 10000) {
+  const res = await fetchTimeout(url, {
+    method,
+    headers: {
+      ...(token ? { Authorization: 'Bearer ' + token } : {}),
+      ...(body ? { 'Content-Type': 'application/json' } : {}),
+      ...headers
+    },
+    body: body ? JSON.stringify(body) : null
+  }, ms);
+  let data = null;
+  const text = await res.text();
+  try { data = text ? JSON.parse(text) : null; } catch { /* respuesta no-JSON */ }
+  if (!res.ok) {
+    const msg = (data && (data.error?.message || data.message || data.error)) || ('HTTP ' + res.status);
+    const err = new Error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+    err.status = res.status;
+    throw err;
+  }
+  return data;
+}
+
+// ── Toasts ──────────────────────────────────────────────────────
+const TOAST_ICONS = {
+  success: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
+  error:   '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>',
+  warn:    '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>',
+  info:    '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>'
+};
+function showToast(msg, type = 'info', ms = 4200) {
+  const root = $('#toastRoot');
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.innerHTML = '<span class="toast-icon">' + TOAST_ICONS[type] + '</span><span>' + escapeHtml(msg) + '</span>';
+  root.appendChild(el);
+  setTimeout(() => { el.classList.add('leaving'); setTimeout(() => el.remove(), 320); }, ms);
+}
+
+// ── Modal genérico (confirmación / resultados) ──────────────────
+let modalConfirmCb = null;
+function openModal({ title, bodyHTML, confirmLabel = 'Aceptar', cancelLabel = 'Cancelar', danger = false, wide = false, hideCancel = false, onConfirm = null }) {
+  $('#modalTitle').textContent = title;
+  $('#modalBody').innerHTML = bodyHTML || '';
+  const ok = $('#modalConfirmBtn'), cancel = $('#modalCancelBtn');
+  ok.textContent = confirmLabel;
+  ok.className = 'btn ' + (danger ? 'btn-danger' : 'btn-primary');
+  cancel.textContent = cancelLabel;
+  cancel.classList.toggle('hidden', !!hideCancel);
+  $('#modalBox').classList.toggle('wide', !!wide);
+  modalConfirmCb = onConfirm;
+  $('#modalOverlay').classList.remove('hidden');
+  setTimeout(() => ok.focus(), 40);
+}
+function closeModal() { $('#modalOverlay').classList.add('hidden'); modalConfirmCb = null; }
+function confirmDialog({ title, bodyHTML, confirmLabel, danger, onConfirm }) {
+  openModal({ title, bodyHTML, confirmLabel, danger, onConfirm });
+}
+$('#modalConfirmBtn').addEventListener('click', () => { const cb = modalConfirmCb; closeModal(); if (cb) cb(); });
+$('#modalCancelBtn').addEventListener('click', closeModal);
+$('#modalCloseBtn').addEventListener('click', closeModal);
+$('#modalOverlay').addEventListener('click', e => { if (e.target.id === 'modalOverlay') closeModal(); });
+
+/* =====================================================================
+   4) INTERNACIONALIZACIÓN (es / en)
+   ===================================================================== */
+const I18N = {
+es: {
+  'brand.tag':'Hub de IA','nav.newChat':'Nueva conversación','search.ph':'Buscar conversaciones…','nav.connectors':'Conectores','nav.settings':'Ajustes',
+  'welcome.title':'¿En qué puedo ayudarte hoy?','welcome.lead':'Soy Nexus AI. Converso, redacto, programo… y puedo trabajar con tus apps favoritas si las conectas en el Centro de conectores.',
+  'welcome.privacy':'Tus claves y datos nunca salen de tu navegador.','welcome.openSettings':'Abre Ajustes →',
+  'suggest.label':'Conectores sugeridos para esto','composer.ph':'Escribe tu mensaje… (la IA detecta qué conectar)','composer.ready':'Listo para enviar','composer.streaming':'Generando respuesta…',
+  'kbd.send':'enviar','kbd.newline':'salto de línea','kbd.search':'buscar',
+  'conn.title':'Centro de conectores','conn.sub':'Conecta Nexus AI con tus aplicaciones. La IA detecta cuándo usarlos y tú mantienes el control. Las claves se guardan solo en tu navegador.',
+  'notice.title':'Aviso honesto:','notice.body':'Canva y Notion exigen un intercambio OAuth en servidor seguro, imposible de completar 100% desde el navegador. Para ellas (y para probar sin claves reales) activamos un modo demo claramente etiquetado: la IA simula las acciones y las marca como [DEMO]. Google, GitHub, Dropbox, Trello y Asana sí funcionan con llamadas reales desde tu navegador.',
+  'gh.body':'Una sola conexión segura (OAuth 2.0 con Google Identity Services) habilita Drive, Gmail, Calendar, Docs y Sheets.','gh.connect':'Conectar con Google','gh.disconnect':'Desconectar Google',
+  'custom.title':'Conector personalizado','custom.badge':'· MCP / API propia','custom.sub':'¿Usas un servidor MCP, un proxy o tu propia API? Regístralo aquí: estará disponible como contexto para la IA y podrás probar la conexión al instante.',
+  'custom.name':'Nombre','custom.url':'URL del servidor MCP / API','custom.auth':'Tipo de autenticación','custom.header':'Nombre de la cabecera','custom.secret':'Clave / Token (se guarda solo en tu navegador)','custom.test':'Probar conexión','custom.save':'Guardar conector',
+  'auth.none':'Ninguna','auth.apikey':'API key (cabecera)','auth.bearer':'Bearer token','auth.oauth':'OAuth 2.0 (token ya obtenido)',
+  'field.webhookUrl':'URL del webhook','field.pat':'Personal Access Token','field.token':'Access token','field.trelloKey':'API Key de Trello','field.trelloToken':'Token de Trello',
+  'set.title':'Ajustes','set.sub':'Personaliza la apariencia, la IA, los datos y la privacidad. Todo se guarda al instante en tu navegador (localStorage).',
+  'card.appearance':'Apariencia','card.appearanceSub':'Tema, color de acento, letra, densidad e idioma.','card.ai':'Inteligencia artificial','card.aiSub':'Tus claves se guardan únicamente en localStorage y viajan directo de tu navegador al proveedor. Nunca pasan por terceros.',
+  'card.data':'Gestión de datos','card.dataSub':'Exporta todo (conversaciones, ajustes, conectores) a un archivo JSON, o restáuralo en otro navegador.','card.privacy':'Privacidad y seguridad','card.google':'Cuenta de Google','card.googleSub':'Sincroniza Drive, Gmail, Calendar, Docs y Sheets.','card.shortcuts':'Atajos de teclado',
+  'set.theme':'Tema','set.themeSub':'Automático sigue la preferencia de tu sistema.','theme.light':'Claro','theme.dark':'Oscuro','theme.auto':'Automático',
+  'set.accent':'Color de acento','set.accentSub':'6 paletas — se aplican al instante en toda la interfaz.',
+  'set.font':'Tamaño de letra','set.fontSub':'Afecta principalmente al texto del chat.','set.density':'Densidad de la interfaz','set.densitySub':'Compacta muestra más contenido en menos espacio.','density.cozy':'Cómoda','density.compact':'Compacta',
+  'set.lang':'Idioma','set.langSub':'Traducción de la interfaz (los mensajes con la IA no se traducen).',
+  'set.provider':'Proveedor','set.providerSub':'Anthropic (Claude) u OpenAI-compatible (OpenAI, Groq, OpenRouter, DeepSeek…).',
+  'set.defaultModel':'Modelo por defecto','set.defaultModelSub':'También puedes cambiarlo rápido en la barra superior.',
+  'set.temp':'Temperatura','set.tempSub':'0 = preciso y determinista · 1 = creativo.','set.instructions':'Instrucciones personalizadas para la IA','set.instructionsPh':'Ej. Responde siempre en español, con ejemplos de código comentados, y trata de ser breve…',
+  'data.export':'Exportar JSON','data.import':'Importar JSON','data.wipe':'Borrar todo',
+  'priv.title':'Nexus AI no tiene servidores. Nada de lo que escribes pasa por nosotros.',
+  'priv.1':'Tus API keys, tokens y conversaciones se guardan únicamente en localStorage de este navegador.','priv.2':'Las peticiones de IA van directo de tu navegador al proveedor que elijas (Anthropic/OpenAI o compatible).','priv.3':'Los conectores de Google usan OAuth 2.0 en cliente (Google Identity Services). El token vive en tu navegador y expira en ~1 hora; puedes revocarlo cuando quieras.','priv.4':'Si exportas el JSON de respaldo, incluirá tus claves: guárdalo como si fuera una contraseña.','priv.5':'El HTML renderizado se genera con escapado estricto y sin HTML crudo del modelo: no hay XSS por contenido de la IA.','priv.6':'Borra todo cuando dejes de usar un equipo compartido: un clic en “Borrar todo”.',
+  'sc.send':'Enviar mensaje','sc.newline':'Salto de línea en el mensaje','sc.search':'Enfocar el buscador de conversaciones','sc.collapse':'Colapsar / expandir barra lateral','sc.esc':'Cerrar ventanas emergentes',
+  'footer.made':'un solo archivo HTML, sin backend. Hecho para publicarse gratis.',
+  'cat.storage':'Almacenamiento','cat.mail':'Correo','cat.calendar':'Calendario','cat.docs':'Documentos','cat.design':'Diseño','cat.notes':'Notas y wikis','cat.chat':'Mensajería','cat.dev':'Desarrollo','cat.tasks':'Proyectos y tareas',
+  'conn.connected':'Conectado','conn.demo':'Demo','conn.disconnected':'Desconectado','conn.connect':'Conectar','conn.disconnect':'Desconectar','conn.test':'Probar','conn.tryDemo':'Activar modo demo','conn.stopDemo':'Desactivar demo','conn.useInChat':'Usar en el chat','conn.inChat':'En el chat ✓','conn.saved':'Conector guardado','conn.count':'conectados'
+}, en: {
+  'brand.tag':'AI Hub','nav.newChat':'New conversation','search.ph':'Search conversations…','nav.connectors':'Connectors','nav.settings':'Settings',
+  'welcome.title':'What can I help you with today?','welcome.lead':'I am Nexus AI. I chat, write, code… and can work with your favorite apps if you connect them in the Connector Center.',
+  'welcome.privacy':'Your keys and data never leave your browser.','welcome.openSettings':'Open Settings →',
+  'suggest.label':'Suggested connectors for this','composer.ph':'Type your message… (AI detects what to connect)','composer.ready':'Ready to send','composer.streaming':'Generating response…',
+  'kbd.send':'send','kbd.newline':'new line','kbd.search':'search',
+  'conn.title':'Connector Center','conn.sub':'Connect Nexus AI to your apps. AI detects when to use them and you stay in control. Keys are stored only in your browser.',
+  'notice.title':'Honest notice:','notice.body':'Canva and Notion require a secure server-side OAuth exchange, impossible to complete 100% from the browser. For them (and to test without real keys) we enable a clearly labeled demo mode: AI simulates the actions and tags them [DEMO]. Google, GitHub, Dropbox, Trello and Asana do work with real browser calls.',
+  'gh.body':'One secure connection (OAuth 2.0 via Google Identity Services) unlocks Drive, Gmail, Calendar, Docs and Sheets.','gh.connect':'Connect with Google','gh.disconnect':'Disconnect Google',
+  'custom.title':'Custom connector','custom.badge':'· MCP / your own API','custom.sub':'Using an MCP server, a proxy or your own API? Register it here: it will be available as AI context and you can test the connection instantly.',
+  'custom.name':'Name','custom.url':'MCP / API server URL','custom.auth':'Authentication type','custom.header':'Header name','custom.secret':'Key / Token (stored only in your browser)','custom.test':'Test connection','custom.save':'Save connector',
+  'auth.none':'None','auth.apikey':'API key (header)','auth.bearer':'Bearer token','auth.oauth':'OAuth 2.0 (already-obtained token)',
+  'field.webhookUrl':'Webhook URL','field.pat':'Personal Access Token','field.token':'Access token','field.trelloKey':'Trello API Key','field.trelloToken':'Trello Token',
+  'set.title':'Settings','set.sub':'Customize appearance, AI, data and privacy. Everything is saved instantly in your browser (localStorage).',
+  'card.appearance':'Appearance','card.appearanceSub':'Theme, accent color, font, density and language.','card.ai':'Artificial intelligence','card.aiSub':'Your keys are stored only in localStorage and travel directly from your browser to the provider. They never pass through third parties.',
+  'card.data':'Data management','card.dataSub':'Export everything (conversations, settings, connectors) to a JSON file, or restore it elsewhere.','card.privacy':'Privacy & security','card.google':'Google account','card.googleSub':'Sync Drive, Gmail, Calendar, Docs and Sheets.','card.shortcuts':'Keyboard shortcuts',
+  'set.theme':'Theme','set.themeSub':'Automatic follows your system preference.','theme.light':'Light','theme.dark':'Dark','theme.auto':'Automatic',
+  'set.accent':'Accent color','set.accentSub':'6 palettes — applied instantly across the whole UI.',
+  'set.font':'Font size','set.fontSub':'Mostly affects chat text.','set.density':'Interface density','set.densitySub':'Compact fits more content on screen.','density.cozy':'Cozy','density.compact':'Compact',
+  'set.lang':'Language','set.langSub':'Interface translation (AI messages are not translated).',
+  'set.provider':'Provider','set.providerSub':'Anthropic (Claude) or OpenAI-compatible (OpenAI, Groq, OpenRouter, DeepSeek…).',
+  'set.defaultModel':'Default model','set.defaultModelSub':'You can also switch it quickly from the top bar.',
+  'set.temp':'Temperature','set.tempSub':'0 = precise & deterministic · 1 = creative.','set.instructions':'Custom instructions for the AI','set.instructionsPh':'e.g. Always answer in English, with commented code examples, and keep it brief…',
+  'data.export':'Export JSON','data.import':'Import JSON','data.wipe':'Erase everything',
+  'priv.title':'Nexus AI has no servers. Nothing you type passes through us.',
+  'priv.1':'Your API keys, tokens and conversations are stored only in this browser’s localStorage.','priv.2':'AI requests go straight from your browser to your chosen provider (Anthropic/OpenAI or compatible).','priv.3':'Google connectors use client-side OAuth 2.0 (Google Identity Services). The token lives in your browser and expires in ~1 hour; revoke anytime.','priv.4':'If you export the JSON backup it will include your keys: guard it like a password.','priv.5':'Rendered HTML is built with strict escaping — no raw model HTML — preventing XSS from AI content.','priv.6':'Erase everything when you stop using a shared computer: one click on “Erase everything”.',
+  'sc.send':'Send message','sc.newline':'New line in the message','sc.search':'Focus the conversation search','sc.collapse':'Collapse / expand sidebar','sc.esc':'Close pop-ups',
+  'footer.made':'a single HTML file, no backend. Built to be published for free.',
+  'cat.storage':'Storage','cat.mail':'Mail','cat.calendar':'Calendar','cat.docs':'Documents','cat.design':'Design','cat.notes':'Notes & wikis','cat.chat':'Messaging','cat.dev':'Development','cat.tasks':'Projects & tasks',
+  'conn.connected':'Connected','conn.demo':'Demo','conn.disconnected':'Disconnected','conn.connect':'Connect','conn.disconnect':'Disconnect','conn.test':'Test','conn.tryDemo':'Enable demo mode','conn.stopDemo':'Disable demo','conn.useInChat':'Use in chat','conn.inChat':'In chat ✓','conn.saved':'Connector saved','conn.count':'connected'
+}};
+const t = key => (I18N[state.settings.language] && I18N[state.settings.language][key]) ?? I18N.es[key] ?? key;
+function applyI18n() {
+  const lang = state.settings.language;
+  document.documentElement.lang = lang;
+  $$('[data-i18n]').forEach(el => { el.textContent = t(el.getAttribute('data-i18n')); });
+  $$('[data-i18n-ph]').forEach(el => { el.setAttribute('placeholder', t(el.getAttribute('data-i18n-ph'))); });
+}
+const STARTERS = {
+  es: [
+    { icon:'✉️', title:'Redacta un correo', body:'Profesional para un cliente que pidió una cotización con entrega en 2 semanas.', prompt:'Redacta un correo profesional para un cliente que pidió una cotización con entrega en 2 semanas.' },
+    { icon:'🎨', title:'Diseña un póster', body:'Para mi concierto indie del 30 de noviembre — sugiere Canva y Drive.', prompt:'Diseña un póster para mi concierto indie del 30 de noviembre.' },
+    { icon:'📅', title:'Agenda una reunión', body:'Mañana a las 10 con diseño y producto — sugiere Calendar y Gmail.', prompt:'Agenda una reunión mañana a las 10 con diseño y producto.' },
+    { icon:'💻', title:'Genera y revisa código', body:'Una función debounce en JavaScript, con ejemplos y tests.', prompt:'Escribe una función debounce en JavaScript con ejemplos y tests.' }
+  ],
+  en: [
+    { icon:'✉️', title:'Draft an email', body:'Professional reply to a client asking for a quote, 2-week delivery.', prompt:'Draft a professional email to a client who asked for a quote with 2-week delivery.' },
+    { icon:'🎨', title:'Design a poster', body:'For my indie concert on Nov 30 — suggests Canva and Drive.', prompt:'Design a poster for my indie concert on November 30.' },
+    { icon:'📅', title:'Schedule a meeting', body:'Tomorrow 10am with design & product — suggests Calendar and Gmail.', prompt:'Schedule a meeting tomorrow at 10am with design and product.' },
+    { icon:'💻', title:'Generate & review code', body:'A debounce function in JavaScript, with examples and tests.', prompt:'Write a debounce function in JavaScript with examples and tests.' }
+  ]
+};
+
+/* =====================================================================
+   5) APARIENCIA (tema, acento, densidad, letra, idioma)
+   ===================================================================== */
+const systemDark = () => window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+function effectiveTheme() { return state.settings.theme === 'auto' ? (systemDark() ? 'dark' : 'light') : state.settings.theme; }
+function applyAppearance() {
+  const s = state.settings;
+  document.documentElement.setAttribute('data-theme', effectiveTheme());
+  document.documentElement.setAttribute('data-accent', s.accent);
+  document.documentElement.setAttribute('data-density', s.density);
+  document.documentElement.setAttribute('data-font', s.fontSize);
+  $('#metaTheme')?.setAttribute('content', effectiveTheme() === 'dark' ? '#0e1014' : '#f4f4f8');
+  // Sincronizar controles de Ajustes
+  $$('[data-theme-set]').forEach(b => b.classList.toggle('active', b.dataset.themeSet === s.theme));
+  $$('[data-accent-set]').forEach(b => b.classList.toggle('active', b.dataset.accentSet === s.accent));
+  $$('[data-font-set]').forEach(b => b.classList.toggle('active', b.dataset.fontSet === s.fontSize));
+  $$('[data-density-set]').forEach(b => b.classList.toggle('active', b.dataset.densitySet === s.density));
+  $$('[data-lang-set]').forEach(b => b.classList.toggle('active', b.dataset.langSet === s.language));
+  $$('[data-provider-set]').forEach(b => b.classList.toggle('active', b.dataset.providerSet === s.provider));
+  // Icono sol/luna según tema efectivo
+  const dark = effectiveTheme() === 'dark';
+  $('#iconMoon').style.display = dark ? 'block' : 'none';
+  $('#iconSun').style.display  = dark ? 'none'  : 'block';
+  // Filas de claves según proveedor
+  $('#rowAnthropicKey').classList.toggle('hidden', s.provider !== 'anthropic');
+  $('#rowOpenaiKey').classList.toggle('hidden', s.provider !== 'openai');
+  // Punto de proveedor en topbar
+  const dot = $('#providerDot');
+  dot.classList.toggle('anthropic', s.provider === 'anthropic');
+  dot.classList.toggle('openai', s.provider === 'openai');
+}
+if (window.matchMedia) {
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    if (state.settings.theme === 'auto') applyAppearance();
+  });
+}
+
+/* =====================================================================
+   6) CONVERSACIONES — historial (crear, renombrar, eliminar, buscar)
+   ===================================================================== */
+const GROUP_LABELS = {
+  es: { today:'Hoy', yesterday:'Ayer', week:'Últimos 7 días', older:'Anteriores', empty:'Aún no hay conversaciones.<br>Pulsa “Nueva conversación” para empezar.', noResults:'Sin resultados para tu búsqueda.' },
+  en: { today:'Today', yesterday:'Yesterday', week:'Last 7 days', older:'Older', empty:'No conversations yet.<br>Press “New conversation” to start.', noResults:'No results for your search.' }
+};
+const groupLabels = () => GROUP_LABELS[state.settings.language] || GROUP_LABELS.es;
+function conversationGroup(ts) {
+  const now = new Date(); const d = new Date(ts);
+  const startOfDay = x => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const diffDays = Math.floor((startOfDay(now) - startOfDay(d)) / 86400000);
+  if (diffDays <= 0) return 'today';
+  if (diffDays === 1) return 'yesterday';
+  if (diffDays <= 7) return 'week';
+  return 'older';
+}
+function createConversation() {
+  const conv = { id: uid(), title: state.settings.language === 'es' ? 'Nueva conversación' : 'New conversation', created: Date.now(), updated: Date.now(), messages: [] };
+  state.conversations.unshift(conv);
+  state.activeId = conv.id;
+  save();
+  return conv;
+}
+function selectConversation(id) {
+  state.activeId = id;
+  save();
+  renderConversationList($('#searchInput').value);
+  renderChatView();
+  closeMobileSidebar();
+}
+function deleteConversation(id) {
+  const conv = state.conversations.find(c => c.id === id);
+  if (!conv) return;
+  confirmDialog({
+    title: state.settings.language === 'es' ? 'Eliminar conversación' : 'Delete conversation',
+    bodyHTML: (state.settings.language === 'es' ? 'Se eliminará <b>“' + escapeHtml(conv.title) + '”</b> de forma permanente de este navegador.' : '<b>“' + escapeHtml(conv.title) + '”</b> will be permanently deleted from this browser.'),
+    confirmLabel: state.settings.language === 'es' ? 'Eliminar' : 'Delete', danger: true,
+    onConfirm: () => {
+      state.conversations = state.conversations.filter(c => c.id !== id);
+      if (state.activeId === id) state.activeId = state.conversations[0]?.id || null;
+      save(); renderConversationList($('#searchInput').value); renderChatView();
+      showToast(state.settings.language === 'es' ? 'Conversación eliminada' : 'Conversation deleted', 'success');
+    }
+  });
+}
+function startRename(itemEl, conv) {
+  const titleEl = $('.conv-title', itemEl);
+  const input = document.createElement('input');
+  input.className = 'conv-rename-input';
+  input.value = conv.title;
+  input.setAttribute('aria-label', state.settings.language === 'es' ? 'Renombrar conversación' : 'Rename conversation');
+  titleEl.replaceWith(input);
+  input.focus(); input.select();
+  const commit = () => {
+    const v = input.value.trim();
+    if (v) conv.title = v.slice(0, 80);
+    conv.updated = conv.updated; save(); renderConversationList($('#searchInput').value);
+  };
+  input.addEventListener('blur', commit);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+    if (e.key === 'Escape') { input.removeEventListener('blur', commit); renderConversationList($('#searchInput').value); }
+  });
+}
+function renderConversationList(filter = '') {
+  const list = $('#conversationList');
+  if (!list) return;
+  const q = (filter || '').trim().toLowerCase();
+  const labels = groupLabels();
+  const matches = state.conversations.filter(c => !q || c.title.toLowerCase().includes(q) || c.messages.some(m => m.content.toLowerCase().includes(q)));
+  if (!state.conversations.length) { list.innerHTML = '<div class="conv-empty">' + labels.empty + '</div>'; return; }
+  if (!matches.length) { list.innerHTML = '<div class="conv-empty">' + labels.noResults + '</div>'; return; }
+  const groups = { today: [], yesterday: [], week: [], older: [] };
+  [...matches].sort((a, b) => b.updated - a.updated).forEach(c => groups[conversationGroup(c.updated)].push(c));
+  const order = ['today', 'yesterday', 'week', 'older'];
+  let html = '';
+  for (const g of order) {
+    if (!groups[g].length) continue;
+    html += '<div class="conv-group">' + labels[g] + '</div>';
+    for (const c of groups[g]) {
+      html += '<div class="conv-item' + (c.id === state.activeId ? ' active' : '') + '" data-id="' + c.id + '" tabindex="0" role="button" aria-current="' + (c.id === state.activeId) + '">'
+        + '<svg class="conv-item-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'
+        + '<span class="conv-title">' + escapeHtml(c.title) + '</span>'
+        + '<span class="conv-actions">'
+        +   '<button class="icon-btn" data-act="rename" aria-label="Renombrar" title="Renombrar"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 0 1 4 4L8 20l-5 1 1-5L17 3z"/></svg></button>'
+        +   '<button class="icon-btn" data-act="delete" aria-label="Eliminar" title="Eliminar"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>'
+        + '</span></div>';
+    }
+  }
+  list.innerHTML = html;
+}
+$('#conversationList').addEventListener('click', e => {
+  const item = e.target.closest('.conv-item'); if (!item) return;
+  const id = item.dataset.id;
+  const conv = state.conversations.find(c => c.id === id); if (!conv) return;
+  const act = e.target.closest('[data-act]')?.dataset.act;
+  if (act === 'rename') { e.stopPropagation(); startRename(item, conv); return; }
+  if (act === 'delete') { e.stopPropagation(); deleteConversation(id); return; }
+  selectConversation(id);
+});
+$('#conversationList').addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    const item = e.target.closest('.conv-item');
+    if (item && !e.target.closest('button')) { e.preventDefault(); selectConversation(item.dataset.id); }
+  }
+});
+$('#searchInput').addEventListener('input', debounce(e => renderConversationList(e.target.value), 120));
+$('#newChatBtn').addEventListener('click', () => {
+  const current = activeConversation();
+  if (!current || current.messages.length > 0) createConversation();
+  renderConversationList($('#searchInput').value); renderChatView();
+  $('#promptInput').focus();
+});
+
+/* =====================================================================
+   7) MARKDOWN SEGURO
+   Estrategia anti-XSS: (1) se extraen bloques de código en crudo,
+   (2) TODO el resto se escapa con escapeHtml (el modelo nunca inyecta
+   HTML), (3) solo se generan etiquetas propias y enlaces con esquema
+   validado (http/https/mailto). No hay innerHTML con contenido crudo.
+   ===================================================================== */
+function codeBlockHTML(block) {
+  const langLabel = escapeHtml((block.lang || 'code').toUpperCase());
+  return '<div class="code-block"><div class="code-head"><span>' + langLabel + '</span>'
+    + '<button class="code-copy-btn" type="button" aria-label="Copiar código"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span>' + (t('conn.test') === 'Test' ? 'Copy' : 'Copiar') + '</span></button>'
+    + '</div><pre><code>' + escapeHtml(block.code) + '</code></pre></div>';
+}
+function splitTableRow(line) {
+  return line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
+}
+function renderMarkdown(src) {
+  if (!src) return '';
+  let text = String(src).replace(/\r\n/g, '\n');
+  // 1) Extraer bloques de código ANTES de escapar
+  const blocks = [];
+  text = text.replace(/```([a-zA-Z0-9_+\-\.#]*)[^\n]*\n([\s\S]*?)(?:```|$)/g, (m, lang, code) => {
+    blocks.push({ lang: (lang || 'code').trim() || 'code', code: code.replace(/\n$/, '') });
+    return '\n\u0000CODE' + (blocks.length - 1) + '\u0000\n';
+  });
+  // 2) Escapar HTML de todo lo demás (núcleo de la sanitización)
+  text = escapeHtml(text);
+  // 3) Código en línea
+  text = text.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+  // 4) Negritas y cursivas
+  text = text.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
+  text = text.replace(/__([^_\n]+)__/g, '<strong>$1</strong>');
+  text = text.replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
+  text = text.replace(/(^|[\s(])_([^_\n]+)_(?=[\s).,;:!?]|$)/g, '$1<em>$2</em>');
+  // 5) Tachado
+  text = text.replace(/~~([^~\n]+)~~/g, '<del>$1</del>');
+  // 6) Enlaces [texto](url) con esquema validado
+  text = text.replace(/\[([^\]\n]+)\]\(([^)\s]+)\)/g, (m, label, url) => {
+    const clean = String(url).trim();
+    if (!/^(https?:|mailto:)/i.test(clean)) return label;
+    return '<a href="' + clean.replace(/"/g, '%22') + '" target="_blank" rel="noopener noreferrer">' + label + '</a>';
+  });
+  // 7) Bloques: encabezados, tablas, listas, citas, hr, párrafos
+  const lines = text.split('\n');
+  let html = '', para = [], inUl = false, inOl = false, inQuote = false;
+  const flushPara = () => { if (para.length) { html += '<p>' + para.join('<br>') + '</p>'; para = []; } };
+  const closeUl = () => { if (inUl) { html += '</ul>'; inUl = false; } };
+  const closeOl = () => { if (inOl) { html += '</ol>'; inOl = false; } };
+  const closeQuote = () => { if (inQuote) { html += '</blockquote>'; inQuote = false; } };
+  const closeAll = () => { flushPara(); closeUl(); closeOl(); closeQuote(); };
+  for (let i = 0; i < lines.length; i++) {
+    const raw = lines[i];
+    const codeLine = raw.trim().match(/^\u0000CODE(\d+)\u0000$/);
+    if (codeLine) { closeAll(); html += codeBlockHTML(blocks[+codeLine[1]]); continue; }
+    // Tabla GFM: cabecera con pipes + línea divisoria
+    if (/^\s*\|.*\|\s*$/.test(raw) && i + 1 < lines.length && /^\s*\|?[\s:\-|]+\|[\s:\-|]*$/.test(lines[i + 1])) {
+      closeAll();
+      const header = splitTableRow(raw);
+      i += 2;
+      const rows = [];
+      while (i < lines.length && /^\s*\|.*\|\s*$/.test(lines[i])) { rows.push(splitTableRow(lines[i])); i++; }
+      i--;
+      html += '<table><thead><tr>' + header.map(h => '<th>' + h + '</th>').join('') + '</tr></thead><tbody>'
+        + rows.map(r => '<tr>' + r.map(c => '<td>' + c + '</td>').join('') + '</tr>').join('') + '</tbody></table>';
+      continue;
+    }
+    const h = raw.match(/^(#{1,4})\s+(.+)$/);
+    if (h) { closeAll(); const lv = h[1].length; html += '<h' + lv + '>' + h[2] + '</h' + lv + '>'; continue; }
+    if (/^\s*(-{3,}|\*{3,}|_{3,})\s*$/.test(raw)) { closeAll(); html += '<hr>'; continue; }
+    const q = raw.match(/^&gt;\s?(.*)$/);
+    if (q) { flushPara(); closeUl(); closeOl(); if (!inQuote) { html += '<blockquote>'; inQuote = true; } html += q[1] + '<br>'; continue; }
+    closeQuote();
+    const ul = raw.match(/^\s*[-*]\s+(.+)$/);
+    if (ul) { flushPara(); closeOl(); if (!inUl) { html += '<ul>'; inUl = true; } html += '<li>' + ul[1] + '</li>'; continue; }
+    const ol = raw.match(/^\s*\d+\.\s+(.+)$/);
+    if (ol) { flushPara(); closeUl(); if (!inOl) { html += '<ol>'; inOl = true; } html += '<li>' + ol[1] + '</li>'; continue; }
+    closeUl(); closeOl();
+    if (!raw.trim()) { flushPara(); continue; }
+    para.push(raw);
+  }
+  closeAll();
+  // Bloques de código que quedaran inline (línea con texto + placeholder)
+  html = html.replace(/\u0000CODE(\d+)\u0000/g, (m, i) => codeBlockHTML(blocks[+i]));
+  return html;
+}
+// Copiar código: delegación global de clics
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.code-copy-btn');
+  if (!btn) return;
+  const code = btn.closest('.code-block')?.querySelector('code');
+  if (!code) return;
+  navigator.clipboard.writeText(code.textContent).then(
+    () => showToast(state.settings.language === 'es' ? 'Código copiado al portapapeles' : 'Code copied to clipboard', 'success', 2200),
+    () => showToast('Clipboard API no disponible', 'error')
+  );
+});
+
+/* =====================================================================
+   8) CHAT — envío, streaming SSE, detener, regenerar, copiar
+   ===================================================================== */
+let isStreaming = false;
+let currentAbort = null;
+const currentModelId = () => (state.settings.customModel || '').trim() || state.settings.model;
+const currentModelLabel = () => {
+  const id = currentModelId();
+  const found = [...MODELS.anthropic, ...MODELS.openai].find(m => m.id === id);
+  return found ? found.label : id;
+};
+
+function buildSystemPrompt() {
+  const isEs = state.settings.language === 'es';
+  const today = new Date().toLocaleDateString(isEs ? 'es-MX' : 'en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  let p = isEs
+    ? 'Eres Nexus AI, un asistente de IA experto, cálido y conciso. Respondes en el idioma del usuario. Puedes usar Markdown (encabezados, listas, tablas, bloques de código con \`\`\`lenguaje). Hoy es ' + today + '.\n'
+    : 'You are Nexus AI, an expert, warm and concise AI assistant. Reply in the user’s language. Markdown is supported (headings, lists, tables, code blocks with \`\`\`language). Today is ' + today + '.\n';
+  const entries = connectedConnectorEntries();
+  const real = entries.filter(e => !e.demo).map(e => e.name);
+  const demo = entries.filter(e => e.demo).map(e => e.name);
+  if (real.length) {
+    p += (isEs
+      ? '\nEl usuario conectó estos conectores con llamadas reales disponibles: ' + real.join(', ') + '. Puedes redactar acciones y payloads listos para usar; la ejecución con datos reales se dispara con los botones de prueba en cada tarjeta del Centro de conectores.\n'
+      : '\nThe user connected these connectors (real calls available): ' + real.join(', ') + '. You may draft ready-to-use actions and payloads; real execution is triggered by the test buttons on each Connector Center card.\n');
+  }
+  if (demo.length) {
+    p += (isEs
+      ? '\nMODO DEMO (simulado, sin acciones reales en el servicio): ' + demo.join(', ') + '. Si el usuario pide acciones con estos conectores, simúlalas de forma realista y marca cada resultado claramente con [DEMO]. Nunca afirmes que una acción real se ejecutó.\n'
+      : '\nDEMO MODE (simulated, no real service calls): ' + demo.join(', ') + '. If the user requests actions with these connectors, simulate them realistically and tag each result with [DEMO]. Never claim a real action ran.\n');
+  }
+  const active = state.activeContexts.map(id => {
+    const c = connectorById(id);
+    if (c) return c.name;
+    const cc = state.customConnectors.find(x => x.id === id);
+    return cc ? cc.name : null;
+  }).filter(Boolean);
+  if (active.length) {
+    p += (isEs
+      ? '\nEl usuario activó estos conectores para esta conversación: ' + active.join(', ') + '. Prioriza su uso y menciona cómo los aplicarías.\n'
+      : '\nThe user enabled these connectors for this conversation: ' + active.join(', ') + '. Prioritize them and explain how you would apply them.\n');
+  }
+  if (state.settings.instructions.trim()) {
+    p += (isEs ? '\nInstrucciones personalizadas del usuario (respétalas):\n' : '\nCustom user instructions (respect them):\n') + state.settings.instructions.trim() + '\n';
+  }
+  return p;
+}
+
+function messageHTML(msg, idx) {
+  const isEs = state.settings.language === 'es';
+  const time = new Date(msg.ts || Date.now()).toLocaleTimeString(isEs ? 'es-MX' : 'en-US', { hour: '2-digit', minute: '2-digit' });
+  const avatar = msg.role === 'user'
+    ? '<div class="avatar avatar-user" aria-hidden="true">' + (isEs ? 'Tú' : 'You') + '</div>'
+    : '<div class="avatar avatar-ai" aria-hidden="true"><svg viewBox="0 0 64 64" width="20" height="20"><path fill="#fff" d="M32 8l5.4 14 14 5.4-14 5.4L32 47l-5.4-14.2L12.6 27.4l14-5.4L32 8z"/></svg></div>';
+  const meta = msg.role === 'user'
+    ? '<div class="msg-meta"><span>' + (isEs ? 'Tú' : 'You') + '</span><span>·</span><span>' + time + '</span></div>'
+    : '<div class="msg-meta"><span>Nexus AI</span>' + (msg.model ? '<span class="model-tag">' + escapeHtml(msg.model) + '</span>' : '') + '<span>·</span><span>' + time + '</span></div>';
+  const isEsUser = msg.role === 'user';
+  const errHTML = msg.error
+    ? '<div class="msg-error" role="alert"><span>' + escapeHtml(msg.error) + '</span><button type="button" data-act="retry-last">' + (state.settings.language === 'es' ? 'Reintentar' : 'Retry') + '</button></div>'
+    : '';
+  const body = isEsUser
+    ? '<div class="msg-text">' + escapeHtml(msg.content).replace(/\n/g, '<br>') + '</div>'
+    : '<div class="msg-text">' + (msg.content ? renderMarkdown(msg.content) : (msg.error ? '' : '<div class="typing-dots" aria-label="' + (state.settings.language === 'es' ? 'Escribiendo…' : 'Typing…') + '"><span></span><span></span><span></span></div>')) + '</div>' + errHTML;
+  const actions = msg.role === 'assistant' && msg.content ? '<div class="msg-actions">'
+    + '<button class="icon-btn" data-act="copy-msg" data-idx="' + idx + '" aria-label="' + (isEs ? 'Copiar respuesta' : 'Copy reply') + '" title="' + (isEs ? 'Copiar' : 'Copy') + '"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button>'
+    + '<button class="icon-btn" data-act="regen-msg" data-idx="' + idx + '" aria-label="' + (isEs ? 'Regenerar respuesta' : 'Regenerate reply') + '" title="' + (isEs ? 'Regenerar' : 'Regenerate') + '"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6"/></svg></button>'
+    + '</div>' : '';
+  return '<article class="msg" data-idx="' + idx + '">' + avatar + '<div class="msg-body">' + meta + body + actions + '</div></article>';
+}
+function renderChatView() {
+  const conv = activeConversation();
+  const hasMsgs = !!(conv && conv.messages.length);
+  $('#welcome').style.display = hasMsgs ? 'none' : 'block';
+  const box = $('#messages');
+  box.style.display = hasMsgs ? 'block' : 'none';
+  box.innerHTML = hasMsgs ? conv.messages.map((m, i) => messageHTML(m, i)).join('') : '';
+  renderStarters();
+  if (hasMsgs) scrollChatToBottom(false); else $('#chatScroll').scrollTop = 0;
+}
+function renderStarters() {
+  const grid = $('#starterGrid');
+  if (!grid) return;
+  const starters = STARTERS[state.settings.language] || STARTERS.es;
+  grid.innerHTML = starters.map(s =>
+    '<button class="starter" data-prompt="' + escapeHtml(s.prompt) + '"><span class="starter-ic">' + s.icon + '</span><span><strong>' + escapeHtml(s.title) + '</strong><small>' + escapeHtml(s.body) + '</small></span></button>'
+  ).join('');
+}
+function scrollChatToBottom(smooth = true) {
+  const sc = $('#chatScroll');
+  sc.scrollTo({ top: sc.scrollHeight, behavior: smooth ? 'smooth' : 'auto' });
+}
+function setSendMode(streaming) {
+  $('#iconSend').style.display = streaming ? 'none' : 'block';
+  $('#iconStop').style.display = streaming ? 'block' : 'none';
+  const btn = $('#sendBtn');
+  btn.classList.toggle('stop', streaming);
+  btn.setAttribute('aria-label', streaming ? (state.settings.language === 'es' ? 'Detener generación' : 'Stop generating') : 'Enviar mensaje');
+  $('#composerStatus').textContent = streaming ? t('composer.streaming') : t('composer.ready');
+}
+function updateSendState() {
+  const empty = !$('#promptInput').value.trim();
+  $('#sendBtn').disabled = empty && !isStreaming;
+}
+
+// Delegación de acciones dentro de mensajes (copiar / regenerar)
+$('#messages').addEventListener('click', e => {
+  const btn = e.target.closest('[data-act]'); if (!btn) return;
+  const conv = activeConversation(); if (!conv) return;
+  const idx = +btn.dataset.idx;
+  if (btn.dataset.act === 'copy-msg') {
+    const msg = conv.messages[idx]; if (!msg) return;
+    navigator.clipboard.writeText(msg.content).then(() => showToast(state.settings.language === 'es' ? 'Respuesta copiada' : 'Reply copied', 'success', 2000));
+  } else if (btn.dataset.act === 'regen-msg') {
+    if (isStreaming) return;
+    // Truncar desde el último mensaje de usuario anterior a este asistente
+    let userIdx = idx - 1;
+    while (userIdx >= 0 && conv.messages[userIdx].role !== 'user') userIdx--;
+    if (userIdx < 0) return;
+    conv.messages = conv.messages.slice(0, userIdx + 1);
+    conv.updated = Date.now();
+    save(); renderChatView();
+    streamAssistant(conv);
+  }
+});
+
+// Renderizado en rAF para agrupar actualizaciones de tokens
+let rafPending = false;
+function liveRender(conv) {
+  if (rafPending) return;
+  rafPending = true;
+  requestAnimationFrame(() => {
+    rafPending = false;
+    const textEl = $('#messages .msg:last-child .msg-text');
+    const last = conv.messages[conv.messages.length - 1];
+    if (textEl && last) { textEl.innerHTML = renderMarkdown(last.content); scrollChatToBottom(false); }
+  });
+}
+
+async function streamAssistant(conv) {
+  const settings = state.settings;
+  const isEs = settings.language === 'es';
+  isStreaming = true; setSendMode(true); updateSendState();
+  const assistantMsg = { role: 'assistant', content: '', ts: Date.now(), model: currentModelLabel() };
+  conv.messages.push(assistantMsg);
+  renderChatView();
+
+  const systemPrompt = buildSystemPrompt();
+  const apiMessages = conv.messages.slice(0, -1).map(m => ({ role: m.role, content: m.content }));
+  currentAbort = new AbortController();
+  let accumulated = '';
+
+  const onChunk = delta => {
+    accumulated += delta;
+    assistantMsg.content = accumulated;
+    liveRender(conv);
+  };
+  const fail = err => {
+    console.error('[NexusAI] Error de streaming:', err);
+    if (err && err.name === 'AbortError') return; // detener es intencional, no un error
+    assistantMsg.content = accumulated; // conservar lo ya generado
+    assistantMsg.error = err.message || String(err);
+    showToast((isEs ? 'Error de la IA: ' : 'AI error: ') + (err.message || err), 'error', 5200);
+  };
+
+  try {
+    if (settings.provider === 'anthropic') {
+      const key = settings.anthropicKey.trim();
+      if (!key) throw new Error(isEs ? 'Falta tu API key de Anthropic. Añádela en Ajustes → Inteligencia artificial.' : 'Missing Anthropic API key. Add it in Settings → AI.');
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        signal: currentAbort.signal,
+        headers: {
+          'content-type': 'application/json',
+          'x-api-key': key,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true' // requerido para llamar directo desde el navegador
+        },
+        body: JSON.stringify({ model: currentModelId(), max_tokens: 4096, temperature: settings.temperature, system: systemPrompt, stream: true, messages: apiMessages })
+      });
+      if (!res.ok) throw await apiError(res, isEs);
+      await readSSE(res, line => {
+        const data = safeJSON(line);
+        if (!data) return;
+        if (data.type === 'content_block_delta' && data.delta && typeof data.delta.text === 'string') onChunk(data.delta.text);
+        else if (data.type === 'error') throw new Error(data.error?.message || 'Error de Anthropic');
+      });
+    } else {
+      const key = settings.openaiKey.trim();
+      if (!key) throw new Error(isEs ? 'Falta tu API key de OpenAI. Añádela en Ajustes → Inteligencia artificial.' : 'Missing OpenAI API key. Add it in Settings → AI.');
+      const base = (settings.openaiBase || 'https://api.openai.com/v1').replace(/\/+$/, '');
+      const res = await fetch(base + '/chat/completions', {
+        method: 'POST',
+        signal: currentAbort.signal,
+        headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + key },
+        body: JSON.stringify({ model: currentModelId(), temperature: settings.temperature, stream: true, messages: [{ role: 'system', content: systemPrompt }, ...apiMessages] })
+      });
+      if (!res.ok) throw await apiError(res, isEs);
+      await readSSE(res, line => {
+        if (line === '[DONE]') return;
+        const data = safeJSON(line);
+        if (!data) return;
+        const delta = data.choices && data.choices[0] && data.choices[0].delta && data.choices[0].delta.content;
+        if (typeof delta === 'string') onChunk(delta);
+        if (data.error) throw new Error(data.error.message || 'Error del proveedor');
+      });
+    }
+  } catch (err) {
+    fail(err);
+  } finally {
+    isStreaming = false; currentAbort = null;
+    conv.updated = Date.now();
+    assistantMsg.content = accumulated;
+    if (!assistantMsg.content.trim() && !assistantMsg.error) assistantMsg.content = isEs ? '_(respuesta vacía)_' : '_(empty reply)_';
+    save();
+    setSendMode(false); updateSendState();
+    renderConversationList($('#searchInput').value);
+    renderChatView();
+  }
+}
+function safeJSON(line) { try { return JSON.parse(line); } catch { return null; } }
+async function apiError(res, isEs) {
+  let msg = 'HTTP ' + res.status;
+  try { const data = await res.json(); msg = data?.error?.message || data?.message || msg; } catch { /* cuerpo no JSON */ }
+  if (res.status === 401) msg = isEs ? 'API key inválida o sin permisos (401). Revisa Ajustes.' : 'Invalid API key or insufficient permissions (401). Check Settings.';
+  else if (res.status === 429) msg = isEs ? 'Límite de peticiones alcanzado (429). Espera un momento o revisa tu plan.' : 'Rate limit reached (429). Wait a moment or check your plan.';
+  else if (res.status === 404) msg = isEs ? 'Modelo no encontrado (404). Revisa el nombre del modelo en Ajustes.' : 'Model not found (404). Check the model name in Settings.';
+  const e = new Error(msg); e.status = res.status; return e;
+}
+// Lector SSE genérico: acumula buffer y entrega líneas "data: …"
+async function readSSE(res, onLine) {
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder('utf-8');
+  let buffer = '';
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() || '';
+    for (const rawLine of lines) {
+      const line = rawLine.trim();
+      if (!line || line.startsWith(':')) continue;
+      if (line.startsWith('data:')) onLine(line.slice(5).trim());
+    }
+  }
+  const tail = buffer.trim();
+  if (tail.startsWith('data:')) onLine(tail.slice(5).trim());
+}
+function stopStreaming() {
+  if (currentAbort) { currentAbort.abort(); showToast(state.settings.language === 'es' ? 'Generación detenida' : 'Generation stopped', 'info', 2000); }
+}
+$('#composer').addEventListener('submit', e => { e.preventDefault(); handleSend(); });
+async function handleSend() {
+  if (isStreaming) { stopStreaming(); return; }
+  const input = $('#promptInput');
+  const text = input.value.trim();
+  if (!text) return;
+  let conv = activeConversation();
+  if (!conv) conv = createConversation();
+  conv.messages.push({ role: 'user', content: text, ts: Date.now() });
+  const userCount = conv.messages.filter(m => m.role === 'user').length;
+  if (userCount === 1) conv.title = text.slice(0, 52) + (text.length > 52 ? '…' : '');
+  conv.updated = Date.now();
+  input.value = ''; input.style.height = 'auto'; updateSendState();
+  hideSuggestions();
+  save();
+  renderConversationList($('#searchInput').value);
+  renderChatView();
+  await streamAssistant(conv);
+}
+// Reintentar tras un error (delegación)
+$('#messages').addEventListener('click', e => {
+  if (!e.target.closest('[data-act="retry-last"]')) return;
+  const conv = activeConversation(); if (!conv) return;
+  const lastAssistant = [...conv.messages].reverse().findIndex(m => m.role === 'assistant');
+  if (lastAssistant >= 0) {
+    const idx = conv.messages.length - 1 - lastAssistant;
+    conv.messages.splice(idx, 1);
+    save(); renderChatView();
+    streamAssistant(conv);
+  }
+});
+
+/* =====================================================================
+   9) DETECCIÓN INTELIGENTE DE CONECTORES
+   Doble vía: (a) palabras clave locales (instantáneo), (b) una llamada
+   ligera a la IA que clasifica la intención (si hay API key). Los
+   resultados se fusionan y se muestran como chips accionables.
+   ===================================================================== */
+let keywordSuggestions = [];
+let aiSuggestions = [];
+let lastScanText = '';
+
+function googleConnected() {
+  return !!(state.google.token && state.google.expiresAt > Date.now());
+}
+function connectorStatus(id) {
+  if (isGoogleId(id)) return googleConnected() ? 'connected' : 'disconnected';
+  const cc = state.customConnectors.find(x => x.id === id);
+  if (cc) return cc.status || 'connected';
+  return (state.connectors[id] && state.connectors[id].status) || 'disconnected';
+}
+const isConnectedish = id => ['connected', 'demo'].includes(connectorStatus(id));
+function connectedConnectorEntries() {
+  const out = [];
+  if (googleConnected()) {
+    for (const id of ['google-drive', 'gmail', 'google-calendar', 'google-docs', 'google-sheets']) out.push({ id, name: connectorById(id).name, demo: false });
+  }
+  for (const [id, cfg] of Object.entries(state.connectors)) {
+    const c = connectorById(id); if (!c) continue;
+    if (cfg.status === 'connected') out.push({ id, name: c.name, demo: false });
+    else if (cfg.status === 'demo') out.push({ id, name: c.name, demo: true });
+  }
+  for (const cc of state.customConnectors) if (cc.status === 'connected') out.push({ id: cc.id, name: cc.name, demo: false });
+  return out;
+}
+function toggleContext(id) {
+  const i = state.activeContexts.indexOf(id);
+  if (i >= 0) state.activeContexts.splice(i, 1); else state.activeContexts.push(id);
+  save(); renderActiveContextBar(); renderSuggestionChips();
+}
+function renderActiveContextBar() {
+  const bar = $('#activeContextBar');
+  const active = state.activeContexts.filter(isConnectedish);
+  if (!active.length) { bar.classList.add('hidden'); bar.innerHTML = ''; return; }
+  bar.classList.remove('hidden');
+  bar.innerHTML = active.map(id => {
+    const name = connectorById(id)?.name || state.customConnectors.find(x => x.id === id)?.name || id;
+    return '<span class="active-ctx">' + escapeHtml(name) + '<button data-act="remove-ctx" data-id="' + escapeHtml(id) + '" aria-label="Quitar ' + escapeHtml(name) + '"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></span>';
+  }).join('');
+}
+$('#activeContextBar').addEventListener('click', e => {
+  const btn = e.target.closest('[data-act="remove-ctx"]'); if (!btn) return;
+  toggleContext(btn.dataset.id);
+});
+
+function scanKeywords(text) {
+  const lower = ' ' + text.toLowerCase() + ' ';
+  const hits = [];
+  for (const d of DETECTORS) {
+    let score = 0;
+    for (const kw of d.kw) {
+      const k = kw.toLowerCase();
+      if (lower.includes(k)) score += k.length >= 6 ? 2 : 1;
+    }
+    if (score > 0) hits.push({ id: d.id, score });
+  }
+  return hits.sort((a, b) => b.score - a.score).slice(0, 4);
+}
+const hasApiKey = () => state.settings.provider === 'anthropic' ? !!state.settings.anthropicKey.trim() : !!state.settings.openaiKey.trim();
+const scheduleAiClassify = debounce(text => { aiSuggest(text); }, 1100);
+
+async function aiSuggest(text) {
+  if (!hasApiKey()) return;
+  const s = state.settings;
+  const ids = DETECTORS.map(d => d.id).join(', ');
+  const prompt = 'Classify the user message. Reply ONLY with a JSON array (no prose) of up to 3 objects: [{"id":"<connector-id>","reason":"<short reason, max 8 words, in ' + (s.language === 'es' ? 'Spanish' : 'English') + '>"}]. ids: ' + ids + '. If nothing fits, reply [].\n\nMessage: """' + text.slice(0, 500) + '"""';
+  try {
+    let raw = '';
+    if (s.provider === 'anthropic') {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-api-key': s.anthropicKey.trim(), 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+        body: JSON.stringify({ model: 'claude-haiku-4-5', max_tokens: 250, messages: [{ role: 'user', content: prompt }] })
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      raw = (data.content || []).map(b => b.text || '').join('');
+    } else {
+      const base = (s.openaiBase || 'https://api.openai.com/v1').replace(/\/+$/, '');
+      const res = await fetch(base + '/chat/completions', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'authorization': 'Bearer ' + s.openaiKey.trim() },
+        body: JSON.stringify({ model: 'gpt-4o-mini', max_tokens: 250, temperature: 0, messages: [{ role: 'user', content: prompt }] })
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      raw = data.choices?.[0]?.message?.content || '';
+    }
+    const start = raw.indexOf('['), end = raw.lastIndexOf(']');
+    if (start < 0 || end < 0) return;
+    const arr = JSON.parse(raw.slice(start, end + 1));
+    aiSuggestions = (Array.isArray(arr) ? arr : [])
+      .filter(x => x && connectorById(x.id))
+      .slice(0, 3)
+      .map(x => ({ id: x.id, score: 3, reason: String(x.reason || '').slice(0, 80) }));
+    if (text === lastScanText) mergeAndRenderSuggestions();
+  } catch { /* silencioso: la detección IA es un plus, no un requisito */ }
+}
+function mergedSuggestionList() {
+  const map = new Map();
+  const reasonOf = id => DETECTORS.find(d => d.id === id)?.reason[state.settings.language] || '';
+  for (const h of keywordSuggestions) map.set(h.id, { id: h.id, score: h.score * 2, reason: reasonOf(h.id) });
+  for (const h of aiSuggestions) {
+    const cur = map.get(h.id);
+    if (cur) { cur.score += h.score * 3; if (h.reason) cur.reason = h.reason; }
+    else map.set(h.id, { id: h.id, score: h.score * 3, reason: h.reason || reasonOf(h.id) });
+  }
+  return [...map.values()].sort((a, b) => b.score - a.score).slice(0, 4);
+}
+function mergeAndRenderSuggestions() { renderSuggestionChips(mergedSuggestionList()); }
+function hideSuggestions() { $('#suggestionWrap').classList.add('hidden'); }
+function renderSuggestionChips(list) {
+  list = list || mergedSuggestionList();
+  const wrap = $('#suggestionWrap'), box = $('#suggestionChips');
+  if (!list.length) { wrap.classList.add('hidden'); return; }
+  wrap.classList.remove('hidden');
+  const isEs = state.settings.language === 'es';
+  box.innerHTML = list.map(item => {
+    const c = connectorById(item.id); if (!c) return '';
+    const st = connectorStatus(item.id);
+    const connected = st === 'connected' || st === 'demo';
+    const inCtx = state.activeContexts.includes(item.id);
+    const actionLabel = connected ? (inCtx ? (isEs ? '✓ Activo' : '✓ Active') : (isEs ? 'Usar' : 'Use')) : (isEs ? 'Conectar' : 'Connect');
+    return '<div class="sugg-chip' + (inCtx ? ' in-context' : '') + '" data-id="' + c.id + '" role="button" tabindex="0" aria-label="' + escapeHtml(c.name) + '">'
+      + '<span class="sugg-ic">' + c.icon + '</span>'
+      + '<span class="sugg-txt"><b>' + escapeHtml(c.name) + '</b><em title="' + escapeHtml(item.reason || '') + '">' + escapeHtml(item.reason || '') + '</em></span>'
+      + '<button class="sugg-action' + (connected ? ' connected' : '') + '" data-act="' + (connected ? 'toggle-ctx' : 'connect-suggest') + '" data-id="' + c.id + '">' + actionLabel + '</button>'
+      + '</div>';
+  }).join('');
+}
+$('#suggestionChips').addEventListener('click', e => {
+  const actBtn = e.target.closest('[data-act]');
+  const chip = e.target.closest('.sugg-chip');
+  if (actBtn) {
+    e.stopPropagation();
+    const id = actBtn.dataset.id;
+    if (actBtn.dataset.act === 'connect-suggest') connectConnector(id);
+    else toggleContext(id);
+    return;
+  }
+  if (chip) { const id = chip.dataset.id; isConnectedish(id) ? toggleContext(id) : connectConnector(id); }
+});
+$('#suggestionChips').addEventListener('keydown', e => {
+  const chip = e.target.closest('.sugg-chip');
+  if (chip && (e.key === 'Enter' || e.key === ' ') && !e.target.closest('.sugg-action')) {
+    e.preventDefault();
+    const id = chip.dataset.id;
+    isConnectedish(id) ? toggleContext(id) : connectConnector(id);
+  }
+});
+function onPromptInputForDetection() {
+  const text = $('#promptInput').value.trim();
+  lastScanText = text;
+  if (text.length < 8) { keywordSuggestions = []; aiSuggestions = []; hideSuggestions(); return; }
+  keywordSuggestions = scanKeywords(text);
+  mergeAndRenderSuggestions();
+  if (text.length >= 20 && hasApiKey()) scheduleAiClassify(text);
+}
+function refreshSuggestions() { if (lastScanText && $('#promptInput').value.trim()) mergeAndRenderSuggestions(); }
+
+/* =====================================================================
+   10) CONECTORES — catálogo, Google Identity Services, tokens,
+       webhooks, modo demo, acciones rápidas REALES y personalizados
+   ===================================================================== */
+let openPanelId = null;
+
+const connStatusLabel = st => st === 'connected' ? t('conn.connected') : st === 'demo' ? t('conn.demo') : t('conn.disconnected');
+const connStatusClass = st => st === 'connected' ? 'st-connected' : st === 'demo' ? 'st-demo' : 'st-disconnected';
+
+/* ---------- Google Identity Services (OAuth 2.0 en cliente) ---------- */
+let gisLoading = null;
+function loadGIS() {
+  if (window.google && window.google.accounts && window.google.accounts.oauth2) return Promise.resolve();
+  if (gisLoading) return gisLoading;
+  gisLoading = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://accounts.google.com/gsi/client';
+    s.async = true; s.defer = true;
+    s.onload = () => resolve();
+    s.onerror = () => { gisLoading = null; reject(new Error('No se pudo cargar Google Identity Services. Revisa tu conexión o restricciones de red.')); };
+    document.head.appendChild(s);
+  });
+  return gisLoading;
+}
+async function connectGoogle() {
+  if (!GOOGLE_ID_CONFIGURED) {
+    openModal({
+      title: 'Falta tu GOOGLE_CLIENT_ID',
+      bodyHTML: '<p>Para conectar Google Workspace necesitas un <b>OAuth 2.0 Client ID</b> (gratis, tipo "Aplicación web").</p><p style="margin-top:8px">1. Ve a <b>console.cloud.google.com</b> → APIs y servicios → Credenciales<br>2. Crea el Client ID y agrega tu origen autorizado<br>3. Abre <code>NexusAI.html</code>, busca <code>GOOGLE_CLIENT_ID</code> (sección 1 del JavaScript) y pégalo<br>4. Vuelve y pulsa "Conectar con Google"</p><p style="margin-top:8px;color:var(--warn)">Mientras tanto, el resto de Nexus AI funciona con total normalidad.</p>',
+      confirmLabel: 'Entendido', hideCancel: true
+    });
+    return;
+  }
+  try {
+    await loadGIS();
+    const tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: GOOGLE_SCOPES,
+      callback: async resp => {
+        if (resp.error) { showToast('Google: ' + resp.error, 'error'); return; }
+        state.google.token = resp.access_token;
+        state.google.expiresAt = Date.now() + (Number(resp.expires_in || 3500) * 1000);
+        save();
+        try { // Best-effort: recuperar el email del perfil para mostrarlo
+          const info = await apiFetchJSON('https://www.googleapis.com/oauth2/v3/userinfo', { token: resp.access_token });
+          state.google.email = info.email || null;
+        } catch { state.google.email = null; }
+        save();
+        renderGoogleStatus(); renderConnectors(); refreshSuggestions(); updateConnBadge();
+        showToast((state.settings.language === 'es' ? 'Google Workspace conectado' : 'Google Workspace connected') + (state.google.email ? ' · ' + state.google.email : ''), 'success');
+      }
+    });
+    tokenClient.requestAccessToken({ prompt: state.google.token ? '' : 'consent' });
+  } catch (e) { showToast(e.message, 'error', 5600); }
+}
+function disconnectGoogle(silent) {
+  try { if (window.google?.accounts?.oauth2 && state.google.token) google.accounts.oauth2.revoke(state.google.token, () => {}); } catch { /* revocación best-effort */ }
+  state.google.token = null; state.google.expiresAt = 0; state.google.email = null;
+  save();
+  renderGoogleStatus(); renderConnectors(); refreshSuggestions(); updateConnBadge();
+  if (!silent) showToast(state.settings.language === 'es' ? 'Google desconectado' : 'Google disconnected', 'info');
+}
+function renderGoogleStatus() {
+  const on = googleConnected();
+  const isEs = state.settings.language === 'es';
+  $('#googleStatus').classList.toggle('on', on);
+  $('#googleStatusTxt').textContent = on
+    ? (isEs ? 'Conectado' : 'Connected') + (state.google.email ? ' · ' + state.google.email : '') + (isEs ? ' · expira a las ' : ' · expires at ') + new Date(state.google.expiresAt).toLocaleTimeString(isEs ? 'es-MX' : 'en-US', { hour: '2-digit', minute: '2-digit' })
+    : (isEs ? 'No conectado' : 'Not connected');
+  $('#googleConnectBtn').classList.toggle('hidden', on);
+  $('#googleDisconnectBtn').classList.toggle('hidden', !on);
+  const q = $('#quickGoogleBtn');
+  q.classList.toggle('connected', on);
+  $('#quickGoogleTxt').textContent = on ? (isEs ? 'Google · conectado' : 'Google · connected') : 'Google';
+  $('#settingsGoogleConnect').classList.toggle('hidden', on);
+  $('#settingsGoogleDisconnect').classList.toggle('hidden', !on);
+  $('#settingsGoogleEmail').textContent = on ? (state.google.email || (isEs ? 'Conectado' : 'Connected')) : (isEs ? 'No conectado' : 'Not connected');
+  $('#googleClientIdWarning').classList.toggle('hidden', GOOGLE_ID_CONFIGURED);
+}
+
+/* ---------- Tarjeta de conector ---------- */
+const QUICK_ACTION_LABEL = {
+  es: { drive:'Archivos recientes', gmail:'Últimos correos', calendar:'Próximos eventos', docs:'Crear documento', sheets:'Crear hoja', github:'Mis repos recientes', dropbox:'Listar archivos', trello:'Mis tableros', asana:'Mis tareas' },
+  en: { drive:'Recent files', gmail:'Latest emails', calendar:'Upcoming events', docs:'Create document', sheets:'Create spreadsheet', github:'My recent repos', dropbox:'List files', trello:'My boards', asana:'My tasks' }
+};
+function tokenPanelHTML(c, cfg) {
+  const isEs = state.settings.language === 'es';
+  const fields = c.fields || [];
+  return '<div class="cc-panel open" role="group" aria-label="' + escapeHtml(c.name) + '">'
+    + fields.map(f => '<div><label class="field-label" for="fld_' + c.id + '_' + f.key + '"><span>' + t(f.labelKey) + '</span></label>'
+      + '<input class="field" id="fld_' + c.id + '_' + f.key + '" data-field="' + f.key + '" type="' + (f.secret ? 'password' : 'text') + '" placeholder="' + escapeHtml(f.ph || '') + '" value="' + escapeHtml(cfg[f.key] || '') + '" autocomplete="off" spellcheck="false"></div>').join('')
+    + '<div class="cc-panel-row">'
+    +   '<button class="btn btn-ghost btn-sm" data-action="test-token">' + t('conn.test') + '</button>'
+    +   '<button class="btn btn-primary btn-sm" data-action="save-token">' + (isEs ? 'Guardar y conectar' : 'Save & connect') + '</button>'
+    +   '<button class="btn btn-ghost btn-sm" data-action="cancel-panel">' + (isEs ? 'Cancelar' : 'Cancel') + '</button>'
+    + '</div></div>';
+}
+function cardHTML(c) {
+  const isEs = state.settings.language === 'es';
+  const st = connectorStatus(c.id);
+  const desc = c.desc[state.settings.language] || c.desc.es;
+  let inner = '<div class="cc-head"><div class="cc-icon">' + c.icon + '</div><div><div class="cc-name">' + escapeHtml(c.name) + '</div><div class="cc-cat">' + t(c.catKey) + '</div></div><span class="cc-status ' + connStatusClass(st) + '">' + connStatusLabel(st) + '</span></div>';
+  inner += '<p class="cc-desc">' + escapeHtml(desc) + '</p>';
+  if (c.type === 'demo') {
+    inner += '<div class="cc-demo-note">' + (isEs
+      ? 'La API oficial exige un intercambio OAuth en backend. Modo <b>DEMO</b>: la IA simulará sus acciones y las marcará como [DEMO] — nunca afirmará que algo ocurrió de verdad.'
+      : 'The official API requires a server-side OAuth exchange. <b>DEMO</b> mode: AI simulates its actions and tags them [DEMO] — it will never claim anything really happened.') + '</div>';
+    if (c.tip) inner += '<p class="small muted">' + escapeHtml(c.tip[state.settings.language] || c.tip.es) + '</p>';
+  }
+  if ((c.type === 'token' || c.type === 'webhook') && openPanelId === c.id) {
+    inner += tokenPanelHTML(c, state.connectors[c.id] || {});
+  }
+  // Acciones rápidas REALES (solo con conexión activa)
+  const quickLabel = c.quick ? QUICK_ACTION_LABEL[state.settings.language][c.quick] : null;
+  if (quickLabel && st === 'connected') {
+    inner += '<div class="quick-actions"><button class="quick-btn" data-action="quick" data-kind="' + c.quick + '"><svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z"/></svg>' + escapeHtml(quickLabel) + '</button></div>';
+  }
+  // Pie: botones de conexión / desconexión + docs
+  let left = '';
+  if (c.type === 'google') {
+    left = st === 'connected'
+      ? '<button class="btn btn-ghost btn-sm" data-action="google-disconnect">' + t('conn.disconnect') + '</button>'
+      : '<button class="btn btn-primary btn-sm" data-action="google-connect">' + t('conn.connect') + '</button>';
+  } else if (c.type === 'demo') {
+    left = st === 'demo'
+      ? '<button class="btn btn-ghost btn-sm" data-action="demo-toggle">' + t('conn.stopDemo') + '</button>'
+      : '<button class="btn btn-primary btn-sm" data-action="demo-toggle">' + t('conn.tryDemo') + '</button>';
+  } else {
+    left = st === 'connected'
+      ? '<button class="btn btn-ghost btn-sm" data-action="disconnect">' + t('conn.disconnect') + '</button>'
+      : '<button class="btn btn-primary btn-sm" data-action="toggle-panel">' + t('conn.connect') + '</button>';
+  }
+  const inCtx = state.activeContexts.includes(c.id);
+  if (st === 'connected' || st === 'demo') {
+    left += '<button class="quick-btn" data-action="use-context" style="align-self:center">' + (inCtx ? t('conn.inChat') : t('conn.useInChat')) + '</button>';
+  }
+  const docs = c.docsUrl ? '<a class="link-mini" href="' + c.docsUrl + '" target="_blank" rel="noopener noreferrer">Docs<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M9 7h8v8"/></svg></a>' : '';
+  inner += '<div class="cc-foot"><div class="cc-foot-left">' + left + '</div>' + docs + '</div>';
+  return '<div class="connector-card" data-id="' + c.id + '">' + inner + '</div>';
+}
+function renderConnectors() {
+  $('#connectorGrid').innerHTML = CONNECTORS.map(cardHTML).join('');
+  updateConnBadge();
+}
+
+/* ---------- Interacciones de la rejilla de conectores ---------- */
+function collectPanelValues(card, c) {
+  const values = {};
+  $$('[data-field]', card).forEach(input => { values[input.dataset.field] = input.value.trim(); });
+  return values;
+}
+async function testConnector(c, values) {
+  const isEs = state.settings.language === 'es';
+  try {
+    switch (c.id) {
+      case 'github': {
+        const d = await apiFetchJSON('https://api.github.com/user', { token: values.token });
+        return { ok: true, detail: (isEs ? 'Token válido · usuario ' : 'Valid token · user ') + (d.login || '?') };
+      }
+      case 'dropbox': {
+        const d = await apiFetchJSON('https://api.dropboxapi.com/2/users/get_current_account', { method: 'POST', token: values.token, body: null });
+        return { ok: true, detail: (isEs ? 'Dropbox OK · ' : 'Dropbox OK · ') + (d.email || d.name?.display_name || '') };
+      }
+      case 'trello': {
+        const d = await apiFetchJSON('https://api.trello.com/1/members/me?key=' + encodeURIComponent(values.key) + '&token=' + encodeURIComponent(values.token) + '&fields=username');
+        return { ok: true, detail: (isEs ? 'Trello OK · @' : 'Trello OK · @') + (d.username || '') };
+      }
+      case 'asana': {
+        const d = await apiFetchJSON('https://app.asana.com/api/1.0/users/me?opt_fields=name', { token: values.token });
+        return { ok: true, detail: (isEs ? 'Asana OK · ' : 'Asana OK · ') + (d.data?.name || '') };
+      }
+      default: { // Webhooks: no-cors → respuesta opaca (fire & forget)
+        await fetchTimeout(values.url, { method: 'POST', mode: 'no-cors', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ source: 'nexus-ai', text: 'Nexus AI · ping de prueba' }) }, 8000);
+        return { ok: true, opaque: true, detail: isEs ? 'Webhook alcanzable (respuesta opaca: no se puede leer desde el navegador).' : 'Webhook reachable (opaque response: cannot be read from the browser).' };
+      }
+    }
+  } catch (e) {
+    if (e.status === 401 || e.status === 403) return { ok: false, detail: (isEs ? 'Credenciales rechazadas (' : 'Credentials rejected (') + e.status + ').' };
+    if (e.name === 'AbortError' || /tiempo|timeout/i.test(e.message || '')) return { ok: null, detail: isEs ? 'Tiempo de espera agotado.' : 'Timed out.' };
+    return { ok: null, detail: isEs ? 'No se pudo verificar (red o CORS). Puedes guardar igualmente.' : 'Could not verify (network or CORS). You can still save.' };
+  }
+}
+async function saveTokenConnector(c, card) {
+  const isEs = state.settings.language === 'es';
+  const values = collectPanelValues(card, c);
+  const missing = Object.entries(values).filter(([k, v]) => !v).map(([k]) => k);
+  if (missing.length) { showToast(isEs ? 'Completa todos los campos.' : 'Fill in every field.', 'warn'); return; }
+  const test = await testConnector(c, values);
+  if (test.ok === false) { showToast(test.detail, 'error', 5200); return; } // credenciales rechazadas → no guardar
+  state.connectors[c.id] = { status: 'connected', ...values, savedAt: Date.now() };
+  openPanelId = null;
+  save(); renderConnectors(); refreshSuggestions(); updateConnBadge();
+  showToast(test.ok ? (c.name + (isEs ? ' conectado y verificado.' : ' connected & verified.')) : (c.name + (isEs ? ' guardado (sin verificación).' : ' saved (unverified).')), test.ok ? 'success' : 'warn');
+}
+function disconnectBuiltIn(id) {
+  delete state.connectors[id];
+  state.activeContexts = state.activeContexts.filter(x => x !== id);
+  save(); renderConnectors(); renderActiveContextBar(); refreshSuggestions(); updateConnBadge();
+  showToast(state.settings.language === 'es' ? 'Conector desconectado.' : 'Connector disconnected.', 'info');
+}
+function toggleDemo(c) {
+  const isEs = state.settings.language === 'es';
+  const st = connectorStatus(c.id);
+  if (st === 'demo') {
+    delete state.connectors[c.id];
+    state.activeContexts = state.activeContexts.filter(x => x !== c.id);
+    showToast(c.name + (isEs ? ': modo demo desactivado.' : ': demo mode disabled.'), 'info');
+  } else {
+    state.connectors[c.id] = { ...(state.connectors[c.id] || {}), status: 'demo', savedAt: Date.now() };
+    showToast(c.name + (isEs ? ': modo DEMO activado (simulado).' : ': DEMO mode enabled (simulated).'), 'warn');
+  }
+  save(); renderConnectors(); renderActiveContextBar(); refreshSuggestions(); updateConnBadge();
+}
+$('#connectorGrid').addEventListener('click', async e => {
+  const card = e.target.closest('.connector-card'); if (!card) return;
+  const id = card.dataset.id;
+  const c = connectorById(id); if (!c) return;
+  const actEl = e.target.closest('[data-action]'); if (!actEl) return;
+  const action = actEl.dataset.action;
+  switch (action) {
+    case 'toggle-panel': openPanelId = openPanelId === id ? null : id; renderConnectors(); break;
+    case 'cancel-panel': openPanelId = null; renderConnectors(); break;
+    case 'save-token': await saveTokenConnector(c, card); break;
+    case 'test-token': {
+      const values = collectPanelValues(card, c);
+      const r = await testConnector(c, values);
+      showToast(r.detail, r.ok === false ? 'error' : r.ok === true ? 'success' : 'warn', 5200);
+      break;
+    }
+    case 'disconnect': disconnectBuiltIn(id); break;
+    case 'demo-toggle': toggleDemo(c); break;
+    case 'google-connect': connectGoogle(); break;
+    case 'google-disconnect': disconnectGoogle(); break;
+    case 'use-context': toggleContext(id); renderConnectors(); break;
+    case 'quick': runQuickAction(actEl.dataset.kind); break;
+  }
+});
+$('#googleConnectBtn').addEventListener('click', connectGoogle);
+$('#googleDisconnectBtn').addEventListener('click', () => disconnectGoogle());
+$('#quickGoogleBtn').addEventListener('click', () => googleConnected() ? switchView('connectors') : connectGoogle());
+$('#settingsGoogleConnect').addEventListener('click', connectGoogle);
+$('#settingsGoogleDisconnect').addEventListener('click', () => disconnectGoogle());
+
+/* ---------- Acciones rápidas REALES contra APIs ---------- */
+function showResultsModal(title, items, emptyMsg) {
+  const body = items.length
+    ? '<div class="result-list">' + items.map(i =>
+        '<div class="result-item">'
+        + (i.href ? '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--accent-2)"><path d="M7 17 17 7M9 7h8v8"/></svg><a href="' + escapeHtml(i.href) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(i.title) + '</a>' : '<span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escapeHtml(i.title) + '</span>')
+        + (i.sub ? '<small>' + escapeHtml(i.sub) + '</small>' : '')
+        + '</div>').join('') + '</div>'
+    : '<p class="muted">' + escapeHtml(emptyMsg) + '</p>';
+  openModal({ title, bodyHTML: body, confirmLabel: 'Cerrar', hideCancel: true, wide: true });
+}
+const gmailHeader = (msg, name) => (msg.payload?.headers || []).find(h => h.name.toLowerCase() === name.toLowerCase())?.value || '';
+async function runQuickAction(kind) {
+  const isEs = state.settings.language === 'es';
+  try {
+    switch (kind) {
+      case 'calendar': {
+        const data = await apiFetchJSON('https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=' + encodeURIComponent(new Date().toISOString()) + '&maxResults=4&singleEvents=true&orderBy=startTime', { token: state.google.token });
+        const items = (data.items || []).map(ev => ({
+          title: ev.summary || (isEs ? '(sin título)' : '(untitled)'),
+          sub: new Date(ev.start?.dateTime || ev.start?.date).toLocaleString(isEs ? 'es-MX' : 'en-US', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+        }));
+        showResultsModal(isEs ? 'Próximos eventos' : 'Upcoming events', items, isEs ? 'No hay eventos próximos.' : 'No upcoming events.');
+        break;
+      }
+      case 'gmail': {
+        const list = await apiFetchJSON('https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=3', { token: state.google.token });
+        const msgs = await Promise.all((list.messages || []).map(m =>
+          apiFetchJSON('https://gmail.googleapis.com/gmail/v1/users/me/messages/' + m.id + '?format=metadata&metadataHeaders=Subject&metadataHeaders=From', { token: state.google.token })
+        ));
+        const items = msgs.map(m => ({ title: gmailHeader(m, 'Subject') || (isEs ? '(sin asunto)' : '(no subject)'), sub: gmailHeader(m, 'From').split('<')[0].trim() }));
+        showResultsModal(isEs ? 'Últimos correos' : 'Latest emails', items, isEs ? 'Bandeja vacía.' : 'Inbox is empty.');
+        break;
+      }
+      case 'drive': {
+        const data = await apiFetchJSON('https://www.googleapis.com/drive/v3/files?orderBy=modifiedTime%20desc&pageSize=6&fields=files(name,webViewLink,modifiedTime)', { token: state.google.token });
+        const items = (data.files || []).map(f => ({ title: f.name, href: f.webViewLink, sub: new Date(f.modifiedTime).toLocaleDateString(isEs ? 'es-MX' : 'en-US') }));
+        showResultsModal(isEs ? 'Archivos recientes en Drive' : 'Recent Drive files', items, isEs ? 'Sin archivos.' : 'No files found.');
+        break;
+      }
+      case 'docs': {
+        const data = await apiFetchJSON('https://docs.googleapis.com/v1/documents', { method: 'POST', token: state.google.token, body: { title: 'Documento creado con Nexus AI' } });
+        showResultsModal(isEs ? 'Documento creado' : 'Document created', [{ title: isEs ? 'Abrir documento' : 'Open document', href: 'https://docs.google.com/document/d/' + data.documentId + '/edit' }], '');
+        break;
+      }
+      case 'sheets': {
+        const data = await apiFetchJSON('https://sheets.googleapis.com/v4/spreadsheets', { method: 'POST', token: state.google.token, body: { properties: { title: 'Hoja creada con Nexus AI' } } });
+        showResultsModal(isEs ? 'Hoja creada' : 'Spreadsheet created', [{ title: isEs ? 'Abrir hoja de cálculo' : 'Open spreadsheet', href: data.spreadsheetUrl }], '');
+        break;
+      }
+      case 'github': {
+        const token = state.connectors['github']?.token;
+        const repos = await apiFetchJSON('https://api.github.com/user/repos?sort=updated&per_page=6', { token });
+        showResultsModal(isEs ? 'Repositorios recientes' : 'Recent repositories', (Array.isArray(repos) ? repos : []).map(r => ({ title: r.full_name, href: r.html_url, sub: (r.language || '') })), isEs ? 'Sin repositorios.' : 'No repositories.');
+        break;
+      }
+      case 'dropbox': {
+        const token = state.connectors['dropbox']?.token;
+        const data = await apiFetchJSON('https://api.dropboxapi.com/2/files/list_folder', { method: 'POST', token, body: { path: '', limit: 6 } });
+        showResultsModal(isEs ? 'Archivos en Dropbox' : 'Dropbox files', (data.entries || []).map(f => ({ title: (f['.tag'] === 'folder' ? '📁 ' : '📄 ') + f.name })), isEs ? 'Carpeta raíz vacía.' : 'Root folder is empty.');
+        break;
+      }
+      case 'trello': {
+        const cfg = state.connectors['trello'] || {};
+        const boards = await apiFetchJSON('https://api.trello.com/1/members/me/boards?key=' + encodeURIComponent(cfg.key || '') + '&token=' + encodeURIComponent(cfg.token || '') + '&fields=name,url&limit=6');
+        showResultsModal(isEs ? 'Mis tableros de Trello' : 'My Trello boards', (Array.isArray(boards) ? boards : []).map(b => ({ title: b.name, href: b.url })), isEs ? 'Sin tableros.' : 'No boards.');
+        break;
+      }
+      case 'asana': {
+        const token = state.connectors['asana']?.token;
+        const data = await apiFetchJSON('https://app.asana.com/api/1.0/tasks?assignee=me&limit=6&opt_fields=name,completed', { token });
+        showResultsModal(isEs ? 'Mis tareas en Asana' : 'My Asana tasks', (data.data || []).map(tk => ({ title: (tk.completed ? '✓ ' : '○ ') + tk.name })), isEs ? 'Sin tareas asignadas.' : 'No tasks assigned.');
+        break;
+      }
+    }
+  } catch (e) {
+    if (e.status === 401) {
+      if (['calendar', 'gmail', 'drive', 'docs', 'sheets'].includes(kind)) disconnectGoogle(true);
+      showToast(isEs ? 'Sesión expirada o sin permisos. Vuelve a conectar.' : 'Session expired or insufficient scopes. Reconnect.', 'warn', 5200);
+    } else {
+      showToast((isEs ? 'Error: ' : 'Error: ') + (e.message || e), 'error', 5200);
+    }
+  }
+}
+
+/* ---------- Conector personalizado (MCP / API propia) ---------- */
+$('#ccAuth').addEventListener('change', e => {
+  const auth = e.target.value;
+  $('#ccHeaderRow').classList.toggle('hidden', auth !== 'apikey');
+  $('#ccSecretRow').classList.toggle('hidden', auth === 'none');
+});
+async function testCustomConnector() {
+  const isEs = state.settings.language === 'es';
+  const url = $('#ccUrl').value.trim(), auth = $('#ccAuth').value, secret = $('#ccSecret').value.trim();
+  const out = $('#ccTestResult');
+  if (!url) { showToast(isEs ? 'Escribe la URL primero.' : 'Enter the URL first.', 'warn'); return; }
+  const headers = {};
+  if (auth === 'apikey') headers[$('#ccHeader').value.trim() || 'X-API-Key'] = secret;
+  else if (auth === 'bearer' || auth === 'oauth') headers['Authorization'] = 'Bearer ' + secret;
+  out.textContent = isEs ? 'Probando…' : 'Testing…';
+  try {
+    const res = await fetchTimeout(url, { method: 'GET', headers }, 8000);
+    if (res.ok) { out.textContent = '✅ HTTP ' + res.status + (isEs ? ' — conexión exitosa' : ' — connection successful'); showToast(isEs ? 'Conexión exitosa' : 'Connection successful', 'success'); }
+    else if (res.status === 401 || res.status === 403) { out.textContent = '🔑 HTTP ' + res.status + (isEs ? ' — el servidor responde pero rechazó la autenticación' : ' — server responds but auth was rejected'); showToast(isEs ? 'Autenticación rechazada' : 'Auth rejected', 'warn'); }
+    else { out.textContent = '⚠️ HTTP ' + res.status; showToast('HTTP ' + res.status, 'warn'); }
+  } catch {
+    out.textContent = isEs ? '❌ No alcanzable (red o CORS). Si la API bloquea el navegador, usa un proxy MCP.' : '❌ Unreachable (network or CORS). If the API blocks browsers, use an MCP proxy.';
+    showToast(isEs ? 'No se pudo conectar' : 'Could not connect', 'error');
+  }
+}
+$('#ccTestBtn').addEventListener('click', testCustomConnector);
+$('#customConnectorForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const isEs = state.settings.language === 'es';
+  const name = $('#ccName').value.trim(), url = $('#ccUrl').value.trim();
+  try { new URL(url); } catch { showToast(isEs ? 'URL inválida.' : 'Invalid URL.', 'error'); return; }
+  state.customConnectors.push({
+    id: 'cc_' + uid(), name, url, auth: $('#ccAuth').value,
+    headerName: $('#ccHeader').value.trim() || 'X-API-Key', secret: $('#ccSecret').value.trim(),
+    status: 'connected', savedAt: Date.now()
+  });
+  save();
+  e.target.reset(); $('#ccHeaderRow').classList.add('hidden'); $('#ccSecretRow').classList.remove('hidden'); $('#ccTestResult').textContent = '';
+  renderCustomConnectors(); updateConnBadge(); refreshSuggestions();
+  showToast(t('conn.saved') + ': ' + name, 'success');
+});
+function renderCustomConnectors() {
+  const box = $('#customConnectorList');
+  if (!state.customConnectors.length) { box.innerHTML = ''; return; }
+  const isEs = state.settings.language === 'es';
+  box.innerHTML = state.customConnectors.map(cc => {
+    const inCtx = state.activeContexts.includes(cc.id);
+    return '<div class="custom-item"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="var(--accent-2)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M9 2v6M15 2v6M7 8h10v4a5 5 0 0 1-10 0V8z"/><path d="M12 17v5"/></svg>'
+      + '<div class="custom-item-info"><b>' + escapeHtml(cc.name) + ' <span class="cc-status st-connected" style="font-size:8.5px;vertical-align:2px">' + t('conn.connected').toUpperCase() + '</span></b><small>' + escapeHtml(cc.url) + '</small></div>'
+      + '<button class="quick-btn" data-act="use-custom" data-id="' + cc.id + '">' + (inCtx ? t('conn.inChat') : t('conn.useInChat')) + '</button>'
+      + '<button class="icon-btn" data-act="del-custom" data-id="' + cc.id + '" aria-label="' + (isEs ? 'Eliminar' : 'Delete') + '"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>'
+      + '</div>';
+  }).join('');
+}
+$('#customConnectorList').addEventListener('click', e => {
+  const useBtn = e.target.closest('[data-act="use-custom"]');
+  if (useBtn) { toggleContext(useBtn.dataset.id); renderCustomConnectors(); return; }
+  const delBtn = e.target.closest('[data-act="del-custom"]');
+  if (delBtn) {
+    const cc = state.customConnectors.find(x => x.id === delBtn.dataset.id); if (!cc) return;
+    confirmDialog({
+      title: state.settings.language === 'es' ? 'Eliminar conector' : 'Delete connector',
+      bodyHTML: '<b>' + escapeHtml(cc.name) + '</b> ' + (state.settings.language === 'es' ? 'se eliminará de este navegador.' : 'will be removed from this browser.'),
+      confirmLabel: state.settings.language === 'es' ? 'Eliminar' : 'Delete', danger: true,
+      onConfirm: () => {
+        state.customConnectors = state.customConnectors.filter(x => x.id !== cc.id);
+        state.activeContexts = state.activeContexts.filter(x => x !== cc.id);
+        save(); renderCustomConnectors(); renderActiveContextBar(); updateConnBadge();
+      }
+    });
+  }
+});
+
+/* ---------- Punto de entrada "Conectar ahora" (1 clic) ---------- */
+function connectConnector(id) {
+  const isEs = state.settings.language === 'es';
+  const c = connectorById(id);
+  if (c) {
+    const st = connectorStatus(id);
+    if (st === 'connected' || st === 'demo') { toggleContext(id); return; }
+    if (c.type === 'google') { connectGoogle(); return; }
+    if (c.type === 'demo') { toggleDemo(c); return; } // 1 clic: activa demo etiquetado
+    openPanelId = id; // token / webhook: ir a su formulario
+    switchView('connectors');
+    renderConnectors();
+    requestAnimationFrame(() => {
+      const el = document.querySelector('.connector-card[data-id="' + id + '"]');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('flash');
+        setTimeout(() => el.classList.remove('flash'), 2300);
+        const first = el.querySelector('input'); if (first) first.focus({ preventScroll: true });
+      }
+    });
+    return;
+  }
+  switchView('connectors');
+}
+function updateConnBadge() {
+  const n = connectedConnectorEntries().length;
+  $('#connBadge').textContent = n;
+  $('#connSummary').textContent = n + ' ' + t('conn.count');
+}
+
+/* =====================================================================
+   11) AJUSTES — claves, modelos, exportar / importar / borrar
+   ===================================================================== */
+const CUSTOM_OPT = '__custom__';
+function fillModelSelects() {
+  const s = state.settings;
+  const list = MODELS[s.provider] || MODELS.anthropic;
+  if (!s.customModel && !list.some(m => m.id === s.model)) s.model = list[0].id;
+  const customLabel = s.language === 'es' ? '✎ Personalizado…' : '✎ Custom…';
+  const opts = list.map(m => '<option value="' + m.id + '">' + escapeHtml(m.label) + '</option>').join('') + '<option value="' + CUSTOM_OPT + '">' + customLabel + '</option>';
+  [['#modelSelect'], ['#settingsModel']].forEach(([sel]) => {
+    const el = $(sel); el.innerHTML = opts;
+    el.value = s.customModel ? CUSTOM_OPT : s.model;
+  });
+  $('#customModelInline').classList.toggle('hidden', !s.customModel);
+  $('#settingsCustomModel').classList.toggle('hidden', !s.customModel);
+  $('#customModelInline').value = s.customModel;
+  $('#settingsCustomModel').value = s.customModel;
+}
+function syncSettingsInputs() {
+  const s = state.settings;
+  $('#anthropicKey').value = s.anthropicKey;
+  $('#openaiKey').value = s.openaiKey;
+  $('#openaiBase').value = s.openaiBase;
+  $('#temperature').value = s.temperature;
+  $('#tempVal').textContent = Number(s.temperature).toFixed(2).replace(/0$/, '');
+  $('#customInstructions').value = s.instructions;
+  $('#instrCount').textContent = s.instructions.length + ' / 1500';
+}
+function persistAllSettings() {
+  save();
+  applyAppearance();
+}
+// Segmentos genéricos (tema, acento, letra, densidad, idioma, proveedor)
+$$('[data-theme-set]').forEach(b => b.addEventListener('click', () => { state.settings.theme = b.dataset.themeSet; save(); applyAppearance(); }));
+$$('[data-accent-set]').forEach(b => b.addEventListener('click', () => { state.settings.accent = b.dataset.accentSet; save(); applyAppearance(); }));
+$$('[data-font-set]').forEach(b => b.addEventListener('click', () => { state.settings.fontSize = b.dataset.fontSet; save(); applyAppearance(); }));
+$$('[data-density-set]').forEach(b => b.addEventListener('click', () => { state.settings.density = b.dataset.densitySet; save(); applyAppearance(); }));
+$$('[data-provider-set]').forEach(b => b.addEventListener('click', () => {
+  state.settings.provider = b.dataset.providerSet;
+  const list = MODELS[state.settings.provider];
+  if (list && !list.some(m => m.id === state.settings.model)) state.settings.model = list[0].id;
+  state.settings.customModel = '';
+  save(); applyAppearance(); fillModelSelects(); syncSettingsInputs();
+}));
+$$('[data-lang-set]').forEach(b => b.addEventListener('click', () => {
+  state.settings.language = b.dataset.langSet;
+  save();
+  applyAppearance(); applyI18n(); fillModelSelects(); syncSettingsInputs();
+  renderConversationList($('#searchInput').value);
+  renderChatView(); renderConnectors(); renderCustomConnectors(); renderActiveContextBar(); renderGoogleStatus(); updateConnBadge(); setSendMode(false);
+}));
+// Selectores de modelo (topbar y ajustes, sincronizados)
+function onModelPicked(selectEl) {
+  const s = state.settings;
+  if (selectEl.value === CUSTOM_OPT) {
+    s.customModel = s.customModel || '';
+    save(); fillModelSelects();
+    (selectEl.id === 'settingsModel' ? $('#settingsCustomModel') : $('#customModelInline')).focus();
+  } else {
+    s.model = selectEl.value; s.customModel = '';
+    save(); fillModelSelects();
+  }
+}
+$('#modelSelect').addEventListener('change', e => onModelPicked(e.target));
+$('#settingsModel').addEventListener('change', e => onModelPicked(e.target));
+$('#customModelInline').addEventListener('input', e => { state.settings.customModel = e.target.value.trim(); save(); });
+$('#settingsCustomModel').addEventListener('input', e => { state.settings.customModel = e.target.value.trim(); $('#customModelInline').value = e.target.value; save(); });
+// Claves y opciones de IA
+$('#anthropicKey').addEventListener('input', e => { state.settings.anthropicKey = e.target.value; save(); });
+$('#openaiKey').addEventListener('input', e => { state.settings.openaiKey = e.target.value; save(); });
+$('#openaiBase').addEventListener('input', e => { state.settings.openaiBase = e.target.value; save(); });
+$('#temperature').addEventListener('input', e => {
+  state.settings.temperature = +e.target.value;
+  $('#tempVal').textContent = Number(e.target.value).toFixed(2).replace(/0$/, '');
+  save();
+});
+$('#customInstructions').addEventListener('input', e => {
+  state.settings.instructions = e.target.value;
+  $('#instrCount').textContent = e.target.value.length + ' / 1500';
+  save();
+});
+// Mostrar/ocultar claves
+$$('.eye-toggle').forEach(btn => btn.addEventListener('click', () => {
+  const input = document.getElementById(btn.dataset.target);
+  if (input) input.type = input.type === 'password' ? 'text' : 'password';
+}));
+// Exportar / Importar / Borrar datos
+$('#exportBtn').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'nexus-ai-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  showToast(state.settings.language === 'es' ? 'Copia de seguridad descargada' : 'Backup downloaded', 'success');
+});
+$('#importBtn').addEventListener('click', () => $('#importFile').click());
+$('#importFile').addEventListener('change', async e => {
+  const file = e.target.files[0]; if (!file) return;
+  try {
+    const parsed = JSON.parse(await file.text());
+    if (!parsed || typeof parsed !== 'object' || !parsed.settings || !Array.isArray(parsed.conversations)) throw new Error('formato');
+    const def = defaultState();
+    state = {
+      ...def, ...parsed,
+      settings: { ...def.settings, ...parsed.settings },
+      google: { ...def.google, ...(parsed.google || {}) },
+      connectors: parsed.connectors || {},
+      customConnectors: Array.isArray(parsed.customConnectors) ? parsed.customConnectors : [],
+      activeContexts: Array.isArray(parsed.activeContexts) ? parsed.activeContexts : []
+    };
+    save();
+    applyAppearance(); applyI18n(); fillModelSelects(); syncSettingsInputs();
+    renderConversationList(); renderChatView(); renderConnectors(); renderCustomConnectors(); renderActiveContextBar(); renderGoogleStatus(); updateConnBadge(); setSendMode(false);
+    showToast(state.settings.language === 'es' ? 'Datos importados correctamente' : 'Data imported successfully', 'success');
+  } catch {
+    showToast(state.settings.language === 'es' ? 'Archivo inválido: se esperaba un JSON exportado por Nexus AI.' : 'Invalid file: expected a Nexus AI exported JSON.', 'error', 5200);
+  } finally { e.target.value = ''; }
+});
+$('#wipeBtn').addEventListener('click', () => {
+  const isEs = state.settings.language === 'es';
+  confirmDialog({
+    title: isEs ? 'Borrar todo' : 'Erase everything',
+    bodyHTML: isEs
+      ? 'Se eliminarán <b>permanentemente</b> todas las conversaciones, ajustes, claves y conectores guardados en este navegador. Esta acción no se puede deshacer.'
+      : 'All conversations, settings, keys and connectors stored in this browser will be <b>permanently deleted</b>. This cannot be undone.',
+    confirmLabel: isEs ? 'Borrar todo' : 'Erase everything', danger: true,
+    onConfirm: () => { localStorage.removeItem(LS_KEY); localStorage.removeItem('nexus_ai_sidebar'); location.reload(); }
+  });
+});
+// Tema rápido (topbar)
+$('#quickThemeBtn').addEventListener('click', () => {
+  state.settings.theme = effectiveTheme() === 'dark' ? 'light' : 'dark';
+  save(); applyAppearance();
+});
+
+/* =====================================================================
+   12) NAVEGACIÓN, ATAJOS DE TECLADO Y ARRANQUE
+   ===================================================================== */
+const VIEW_MAP = { chat: '#viewChat', connectors: '#viewConnectors', settings: '#viewSettings' };
+function switchView(name) {
+  $$('.view').forEach(v => v.classList.remove('active'));
+  $(VIEW_MAP[name] || '#viewChat').classList.add('active');
+  $('#navConnectors').classList.toggle('active', name === 'connectors');
+  $('#navSettings').classList.toggle('active', name === 'settings');
+  $('#viewConnectors .page-scroll')?.scrollTo?.(0, 0);
+  $('#viewSettings .page-scroll')?.scrollTo?.(0, 0);
+  closeMobileSidebar();
+}
+$('#navConnectors').addEventListener('click', () => switchView('connectors'));
+$('#navSettings').addEventListener('click', () => switchView('settings'));
+$('#welcomeSettingsBtn').addEventListener('click', () => switchView('settings'));
+$('#newChatBtn').addEventListener('click', () => switchView('chat'));
+// Sidebar móvil: hamburguesa + backdrop
+function closeMobileSidebar() { document.body.classList.remove('sidebar-open'); }
+$('#menuToggle').addEventListener('click', () => document.body.classList.toggle('sidebar-open'));
+$('#sidebarBackdrop').addEventListener('click', closeMobileSidebar);
+// Colapsar en escritorio
+function toggleSidebarCollapsed() {
+  document.body.classList.toggle('sidebar-collapsed');
+  try { localStorage.setItem('nexus_ai_sidebar', document.body.classList.contains('sidebar-collapsed') ? '1' : '0'); } catch { /* sin espacio */ }
+}
+$('#collapseBtn').addEventListener('click', toggleSidebarCollapsed);
+// Composer: autoresize + detección mientras escribes + Enter envía
+const promptInput = $('#promptInput');
+promptInput.addEventListener('input', () => {
+  promptInput.style.height = 'auto';
+  promptInput.style.height = Math.min(promptInput.scrollHeight, 220) + 'px';
+  updateSendState();
+  onPromptInputForDetection();
+});
+promptInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); handleSend(); }
+});
+// Starters de la pantalla de bienvenida (delegación)
+$('#starterGrid').addEventListener('click', e => {
+  const btn = e.target.closest('.starter'); if (!btn) return;
+  promptInput.value = btn.dataset.prompt || '';
+  promptInput.style.height = 'auto';
+  updateSendState(); onPromptInputForDetection();
+  handleSend();
+});
+// Atajos globales: Ctrl/⌘+K buscar · Ctrl/⌘+/ colapsar · Esc cerrar
+document.addEventListener('keydown', e => {
+  const mod = e.ctrlKey || e.metaKey;
+  if (mod && (e.key === 'k' || e.key === 'K')) {
+    e.preventDefault();
+    document.body.classList.remove('sidebar-collapsed');
+    document.body.classList.add('sidebar-open');
+    setTimeout(() => $('#searchInput').focus(), 80);
+    return;
+  }
+  if (mod && e.key === '/') { e.preventDefault(); toggleSidebarCollapsed(); return; }
+  if (e.key === 'Escape') {
+    if (!$('#modalOverlay').classList.contains('hidden')) { closeModal(); return; }
+    if (document.body.classList.contains('sidebar-open')) { closeMobileSidebar(); return; }
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  }
+});
+
+/* ---------- Arranque ---------- */
+(function init() {
+  try { if (localStorage.getItem('nexus_ai_sidebar') === '1') document.body.classList.add('sidebar-collapsed'); } catch { /* ignorar */ }
+  applyAppearance();
+  applyI18n();
+  fillModelSelects();
+  syncSettingsInputs();
+  renderConversationList();
+  renderChatView();
+  renderConnectors();
+  renderCustomConnectors();
+  renderActiveContextBar();
+  renderGoogleStatus();
+  updateConnBadge();
+  setSendMode(false);
+  updateSendState();
+  promptInput.focus();
+})();
+</script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a5bae5c62c6a165a',t:'MTc5NDg3ODI2NQ=='};var l=window.parent.location,o;try{o=new URL(l.origin).origin}catch(e){try{o=new URL(new URL(l.href).origin).origin}catch(e){o=''}}var u='/cdn-cgi/challenge-platform/scripts/jsd/main.js?ray=a5bae5c62c6a165a',a=document.createElement('script');a.src=o?new URL(u,o).href:u;document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
